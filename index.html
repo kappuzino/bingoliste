@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<title>Bingo-Liste</title>
+<meta name="description" content="Reifen per Barcode Wagen zuordnen und wiederfinden.">
+<meta name="theme-color" content="#1d6fd6">
+<meta name="color-scheme" content="light dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bingo-Liste">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root {
+    --blue: #1d6fd6;
+    --blue-bg: #e6f0fd;
+    --blue-text: #0f4c98;
+    --green: #1f8a44;
+    --green-bg: #e5f5ea;
+    --green-text: #196b36;
+    --red: #c62828;
+    --red-bg: #fbe9e9;
+    --red-text: #a01f1f;
+    --yellow-bg: #fff6dc;
+    --yellow-text: #8a6300;
+    --yellow-border: #e8c34a;
+
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --tile-empty-bg: #ffffff;
+    --tile-disabled-text: #bdbdbd;
+    --overlay-bg: rgba(20, 20, 20, 0.92);
+
+    --radius: 12px;
+    --gap: 10px;
+    --tabbar-h: 64px;
+    --vvh: 100vh;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --blue-bg: #123054;
+      --blue-text: #8fc0ff;
+      --green-bg: #123a20;
+      --green-text: #7fe0a0;
+      --red-bg: #3d1414;
+      --red-text: #ff9b9b;
+      --yellow-bg: #3a2f0c;
+      --yellow-text: #ffd873;
+      --yellow-border: #7a6120;
+
+      --bg: #121212;
+      --surface: #1a1a1a;
+      --border: #333333;
+      --text: #f0f0f0;
+      --text-muted: #a0a0a0;
+      --tile-empty-bg: #1a1a1a;
+      --tile-disabled-text: #555555;
+      --overlay-bg: rgba(0, 0, 0, 0.96);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    overscroll-behavior: none;
+  }
+
+  .mono {
+    font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    min-height: var(--vvh);
+    height: var(--vvh);
+  }
+
+  .topbar {
+    flex: 0 0 auto;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 500;
+  }
+
+  .app-main {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--tabbar-h) + 16px);
+  }
+
+  .tab-panel { display: block; padding: 14px 14px 0; }
+  .tab-panel.hidden { display: none; }
+
+  /* ---- Tab bar ---- */
+  .tabbar {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    height: var(--tabbar-h);
+    display: flex;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 20;
+  }
+  body.search-focused .tabbar { display: none; }
+
+  .tab-btn {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: inherit;
+    padding: 6px 0;
+    min-height: 48px;
+  }
+  .tab-btn i { font-size: 22px; }
+  .tab-btn.active { color: var(--blue); font-weight: 500; }
+
+  /* ---- Buttons ---- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 48px;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-outline { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+  .btn-outline.btn-danger-outline { color: var(--red-text); border-color: var(--red); background: var(--red-bg); }
+  .btn-yellow { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow-text); }
+  .btn-block { width: 100%; }
+  .btn:active { opacity: 0.75; }
+
+  .icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 22px;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+
+  /* ---- Beladen: Wagen grid ---- */
+  .section-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 4px 0 8px;
+  }
+
+  .wagon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .wagon-tile {
+    position: relative;
+    min-height: 56px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--tile-empty-bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px;
+  }
+  .wagon-tile .count {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .wagon-tile.filled { background: var(--green-bg); color: var(--green-text); border-color: var(--green-bg); }
+  .wagon-tile.filled .count { color: var(--green-text); }
+  .wagon-tile.selected { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .wagon-tile.selected .count { color: #fff; opacity: 0.85; }
+  .wagon-tile.empty-grey { color: var(--tile-disabled-text); }
+  .wagon-tile.empty-grey .count { color: var(--tile-disabled-text); }
+
+  .beladen-actions { display: flex; gap: 8px; margin-bottom: 16px; }
+  .beladen-actions .btn { flex: 1 1 0; }
+
+  .manual-entry { margin-bottom: 16px; }
+  .manual-entry label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .manual-entry-row { display: flex; gap: 8px; }
+  .manual-input {
+    flex: 1 1 auto;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 16px;
+  }
+  .manual-input.mono { letter-spacing: 0.03em; }
+
+  .inline-duplicate {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--yellow-border);
+    background: var(--yellow-bg);
+    color: var(--yellow-text);
+    border-radius: var(--radius);
+    font-size: 14px;
+  }
+  .inline-duplicate.hidden { display: none; }
+  .inline-duplicate .dup-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .inline-duplicate .dup-actions .btn { flex: 1 1 0; min-height: 42px; padding: 8px; font-size: 14px; }
+
+  .wagon-list-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .wagon-list-header h3 { margin: 0; font-size: 16px; font-weight: 500; }
+  .wagon-list-header .badge { font-size: 13px; color: var(--text-muted); }
+
+  .wagon-list { list-style: none; margin: 0 0 16px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .wagon-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+    gap: 8px;
+  }
+  .wagon-list-item:last-child { border-bottom: none; }
+  .wagon-list-item .barcode-mono { flex: 1 1 auto; overflow-wrap: anywhere; }
+  .wagon-list-item .prefix { color: var(--text-muted); }
+  .wagon-list-item .short-hl { font-weight: 500; color: var(--blue-text); background: var(--blue-bg); padding: 1px 3px; border-radius: 4px; }
+  .wagon-list-item .btn-x {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--red-text);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wagon-list-empty { padding: 20px 12px; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+  /* ---- Scan overlay ---- */
+  .scan-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-bg);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+  }
+  .scan-overlay.hidden { display: none; }
+  .qr-reader { flex: 1 1 auto; position: relative; overflow: hidden; }
+  .qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
+  #qrReader__scan_region img { display: none; }
+  #qrReader__dashboard { display: none !important; }
+
+  .scan-target-label {
+    position: absolute;
+    top: 12px; left: 0; right: 0;
+    text-align: center;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    z-index: 2;
+  }
+
+  .scan-toast {
+    position: absolute;
+    left: 12px; right: 12px;
+    bottom: 96px;
+    background: var(--green-bg);
+    color: var(--green-text);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 500;
+    z-index: 2;
+  }
+  .scan-toast.hidden { display: none; }
+
+  .scan-duplicate {
+    position: absolute;
+    left: 12px; right: 12px;
+    bottom: 96px;
+    background: var(--yellow-bg);
+    color: var(--yellow-text);
+    border: 1px solid var(--yellow-border);
+    border-radius: var(--radius);
+    padding: 14px;
+    z-index: 3;
+  }
+  .scan-duplicate.hidden { display: none; }
+  .scan-duplicate p { margin: 0 0 10px; font-size: 15px; font-weight: 500; }
+  .scan-duplicate-actions { display: flex; gap: 8px; }
+  .scan-duplicate-actions .btn { flex: 1 1 0; }
+
+  .scan-end-btn {
+    margin: 12px;
+    margin-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  /* ---- Toast (global) ---- */
+  .toast {
+    position: fixed;
+    left: 16px; right: 16px;
+    bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 14px;
+    z-index: 40;
+    box-shadow: none;
+  }
+  .toast.hidden { display: none; }
+
+  /* ---- Suchen tab ---- */
+  .search-top {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-field-wrap { position: relative; margin-bottom: 12px; }
+  .search-input {
+    width: 100%;
+    min-height: 56px;
+    padding: 14px 48px 14px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 22px;
+    font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .search-input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+  .search-clear {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .search-clear.hidden { display: none; }
+
+  .result-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .result-found { background: var(--green-bg); border-color: var(--green); }
+  .result-notfound { background: var(--red-bg); border-color: var(--red); color: var(--red-text); font-size: 16px; font-weight: 500; padding: 20px 16px; }
+  .result-label { font-size: 13px; color: var(--green-text); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .result-wagon { font-size: 44px; font-weight: 500; color: var(--green-text); line-height: 1.1; margin-bottom: 6px; }
+  .result-barcode {
+    font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 15px;
+    color: var(--green-text);
+    opacity: 0.85;
+  }
+
+  .result-partial { background: var(--surface); text-align: left; padding: 8px; }
+  .result-partial-title { padding: 8px 8px 4px; font-size: 13px; color: var(--text-muted); }
+  .partial-list { list-style: none; margin: 0; padding: 0; }
+  .partial-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border-top: 1px solid var(--border);
+    font-size: 16px;
+  }
+  .partial-list li .mono { font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace; font-weight: 500; }
+  .partial-list li .partial-wagon { color: var(--blue-text); background: var(--blue-bg); padding: 2px 8px; border-radius: 8px; font-size: 14px; }
+
+  /* ---- Uebersicht tab ---- */
+  .uebersicht-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .uebersicht-total { font-size: 15px; font-weight: 500; }
+  .uebersicht-total span { color: var(--blue-text); }
+
+  .uebersicht-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .uebersicht-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+  /* ---- Modal ---- */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    padding: 20px;
+  }
+  .modal.hidden { display: none; }
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .modal-card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 500; }
+  .modal-card p { margin: 0 0 16px; font-size: 14px; color: var(--text-muted); }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 14px; margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+  }
+  .modal-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .modal-actions .btn { flex: 1 1 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar"><h1>Bingo-Liste</h1></header>
+
+  <main class="app-main">
+    <!-- BELADEN -->
+    <section id="tab-beladen" class="tab-panel">
+      <div class="section-title">Wagen wählen</div>
+      <div id="wagonGrid" class="wagon-grid"></div>
+
+      <div class="beladen-actions">
+        <button id="btnScan" class="btn btn-primary btn-block"><i class="ti ti-camera"></i> Scannen</button>
+      </div>
+
+      <div class="manual-entry card">
+        <label for="manualInput">Handscanner / manuelle Eingabe</label>
+        <div class="manual-entry-row">
+          <input id="manualInput" class="manual-input mono" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Barcode + Enter">
+        </div>
+        <div id="manualDuplicate" class="inline-duplicate hidden">
+          <p id="manualDuplicateText"></p>
+          <div class="dup-actions">
+            <button id="manualRebook" class="btn btn-yellow">Umbuchen</button>
+            <button id="manualCancelDup" class="btn btn-outline">Abbrechen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="wagon-list-header">
+        <h3 id="wagonListTitle">W1</h3>
+        <span id="wagonListBadge" class="badge">0 Stück</span>
+      </div>
+      <ul id="wagonList" class="wagon-list"></ul>
+    </section>
+
+    <!-- SUCHEN -->
+    <section id="tab-suchen" class="tab-panel hidden">
+      <div class="search-top">
+        <div class="search-field-wrap">
+          <input id="searchInput" class="search-input" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Code eingeben…">
+          <button id="searchClear" class="search-clear hidden" aria-label="Leeren"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="searchResult" class="search-result"></div>
+      </div>
+    </section>
+
+    <!-- UEBERSICHT -->
+    <section id="tab-uebersicht" class="tab-panel hidden">
+      <div class="uebersicht-header">
+        <button id="btnSettings" class="icon-btn" aria-label="Einstellungen"><i class="ti ti-settings"></i></button>
+        <div class="uebersicht-total">Gesamt: <span id="totalCount">0</span> Stück</div>
+      </div>
+      <div id="uebersichtGrid" class="uebersicht-grid"></div>
+      <div class="uebersicht-actions">
+        <button id="btnExport" class="btn btn-outline btn-block"><i class="ti ti-file-spreadsheet"></i> CSV exportieren</button>
+        <button id="btnEndDay" class="btn btn-outline btn-danger-outline btn-block"><i class="ti ti-trash"></i> Tag beenden</button>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="beladen"><i class="ti ti-barcode"></i><span>Beladen</span></button>
+    <button class="tab-btn" data-tab="suchen"><i class="ti ti-search"></i><span>Suchen</span></button>
+    <button class="tab-btn" data-tab="uebersicht"><i class="ti ti-layout-grid"></i><span>Übersicht</span></button>
+  </nav>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- Scan overlay -->
+<div id="scanOverlay" class="scan-overlay hidden">
+  <div class="qr-reader">
+    <div id="scanTargetLabel" class="scan-target-label"></div>
+    <div id="qrReader"></div>
+    <div id="scanToast" class="scan-toast hidden"></div>
+    <div id="scanDuplicate" class="scan-duplicate hidden">
+      <p id="scanDuplicateText"></p>
+      <div class="scan-duplicate-actions">
+        <button id="btnRebook" class="btn btn-yellow">Umbuchen</button>
+        <button id="btnCancelDup" class="btn btn-outline">Abbrechen</button>
+      </div>
+    </div>
+  </div>
+  <button id="btnEndScan" class="btn btn-primary scan-end-btn"><i class="ti ti-check"></i> Beenden</button>
+</div>
+
+<!-- Settings modal -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>Einstellungen</h3>
+    <div class="modal-field">
+      <label for="settingNormal">Normale Wagen (W)</label>
+      <input id="settingNormal" type="number" min="0" max="99" inputmode="numeric">
+    </div>
+    <div class="modal-field">
+      <label for="settingE">E-Wagen (EW)</label>
+      <input id="settingE" type="number" min="0" max="99" inputmode="numeric">
+    </div>
+    <div class="modal-actions">
+      <button id="settingsCancel" class="btn btn-outline">Abbrechen</button>
+      <button id="settingsSave" class="btn btn-primary">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- End day modal -->
+<div id="endDayModal" class="modal hidden">
+  <div class="modal-card">
+    <h3 id="endDayTitle">Tag beenden?</h3>
+    <p id="endDayText">Alle Wagen und gescannten Barcodes werden dabei gelöscht.</p>
+    <div class="modal-actions">
+      <button id="endDayCancel" class="btn btn-outline">Abbrechen</button>
+      <button id="endDayConfirm" class="btn btn-danger">Weiter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ========== Storage & Model ========== */
+  var DATA_KEY = 'bingoListe.data.v1';
+  var SETTINGS_KEY = 'bingoListe.settings.v1';
+
+  function loadSettings() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (typeof s.normalCount === 'number' && typeof s.eCount === 'number') return s;
+      }
+    } catch (e) {}
+    return { normalCount: 20, eCount: 4 };
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  }
+
+  function loadData() {
+    try {
+      var raw = localStorage.getItem(DATA_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return {};
+  }
+  function saveData() {
+    try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  var settings = loadSettings();
+  var data = loadData();
+
+  function wagonIds() {
+    var ids = [];
+    for (var i = 1; i <= settings.normalCount; i++) ids.push('W' + i);
+    for (var j = 1; j <= settings.eCount; j++) ids.push('EW' + j);
+    return ids;
+  }
+
+  function ensureWagon(id) {
+    if (!data[id]) data[id] = [];
+    return data[id];
+  }
+
+  function wagonNumber(id) { return id.replace(/^EW|^W/, ''); }
+  function wagonLongLabel(id) {
+    return id.indexOf('EW') === 0 ? ('E-Wagen ' + wagonNumber(id)) : ('Wagen ' + wagonNumber(id));
+  }
+
+  function normalize(s) {
+    return (s || '').toString().toUpperCase().replace(/O/g, '0').replace(/I/g, '1');
+  }
+  function shortOf(barcode) {
+    return barcode.length > 2 ? barcode.slice(2) : barcode;
+  }
+
+  function findLocation(shortNorm) {
+    var ids = Object.keys(data);
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i];
+      var list = data[id] || [];
+      for (var k = 0; k < list.length; k++) {
+        if (normalize(shortOf(list[k].barcode)) === shortNorm) {
+          return { wagonId: id, index: k, entry: list[k] };
+        }
+      }
+    }
+    return null;
+  }
+
+  function bookBarcode(rawBarcode, targetWagonId) {
+    var barcode = (rawBarcode || '').trim();
+    if (!barcode) return { status: 'empty' };
+    var short = shortOf(barcode);
+    var shortNorm = normalize(short);
+    var existing = findLocation(shortNorm);
+    if (existing && existing.wagonId !== targetWagonId) {
+      return { status: 'duplicate', barcode: barcode, short: short, shortNorm: shortNorm, existing: existing };
+    }
+    if (existing && existing.wagonId === targetWagonId) {
+      return { status: 'already', barcode: barcode, short: short };
+    }
+    ensureWagon(targetWagonId).push({ barcode: barcode, short: short, time: Date.now() });
+    saveData();
+    return { status: 'booked', barcode: barcode, short: short, count: data[targetWagonId].length };
+  }
+
+  function rebook(shortNorm, targetWagonId) {
+    var loc = findLocation(shortNorm);
+    if (!loc) return null;
+    data[loc.wagonId].splice(loc.index, 1);
+    var entry = { barcode: loc.entry.barcode, short: loc.entry.short, time: Date.now() };
+    ensureWagon(targetWagonId).push(entry);
+    saveData();
+    return entry;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ========== State ========== */
+  var state = {
+    selectedWagonId: wagonIds()[0] || 'W1',
+    activeTab: 'beladen'
+  };
+
+  /* ========== Audio / Vibration ========== */
+  var audioCtx = null;
+  function unlockAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {}
+  }
+  function beep() {
+    if (!audioCtx) return;
+    try {
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.value = 0.18;
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.12);
+    } catch (e) {}
+  }
+  function vibrate(ms) {
+    try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {}
+  }
+
+  /* ========== Toast (global) ========== */
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg, ms) {
+    toastEl.textContent = msg;
+    toastEl.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.add('hidden'); }, ms || 2200);
+  }
+
+  /* ========== Tabs ========== */
+  var tabButtons = document.querySelectorAll('.tab-btn');
+  var tabPanels = {
+    beladen: document.getElementById('tab-beladen'),
+    suchen: document.getElementById('tab-suchen'),
+    uebersicht: document.getElementById('tab-uebersicht')
+  };
+  function switchTab(name) {
+    if (state.activeTab === 'beladen' && name !== 'beladen' && scanning) {
+      endScanSession();
+    }
+    state.activeTab = name;
+    Object.keys(tabPanels).forEach(function (key) {
+      tabPanels[key].classList.toggle('hidden', key !== name);
+    });
+    tabButtons.forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === name);
+    });
+    if (name === 'uebersicht') renderUebersicht();
+    if (name === 'beladen') renderBeladen();
+    if (name !== 'suchen') {
+      document.getElementById('searchInput').blur();
+    }
+  }
+  tabButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () { switchTab(btn.getAttribute('data-tab')); });
+  });
+
+  /* ========== Beladen: Wagon grid & list ========== */
+  var wagonGridEl = document.getElementById('wagonGrid');
+  var wagonListEl = document.getElementById('wagonList');
+  var wagonListTitleEl = document.getElementById('wagonListTitle');
+  var wagonListBadgeEl = document.getElementById('wagonListBadge');
+
+  function renderBeladen() {
+    var ids = wagonIds();
+    if (ids.indexOf(state.selectedWagonId) === -1) state.selectedWagonId = ids[0] || 'W1';
+
+    var html = '';
+    ids.forEach(function (id) {
+      var count = (data[id] || []).length;
+      var cls = 'wagon-tile';
+      if (id === state.selectedWagonId) cls += ' selected';
+      else if (count > 0) cls += ' filled';
+      html += '<button class="' + cls + '" data-wagon="' + id + '">' + id +
+        '<span class="count">' + count + '</span></button>';
+    });
+    wagonGridEl.innerHTML = html;
+    wagonGridEl.querySelectorAll('.wagon-tile').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        state.selectedWagonId = btn.getAttribute('data-wagon');
+        renderBeladen();
+      });
+    });
+
+    var list = data[state.selectedWagonId] || [];
+    wagonListTitleEl.textContent = state.selectedWagonId;
+    wagonListBadgeEl.textContent = list.length + ' Stück';
+
+    if (list.length === 0) {
+      wagonListEl.innerHTML = '<li class="wagon-list-empty">Noch keine Barcodes auf diesem Wagen</li>';
+    } else {
+      var itemsHtml = '';
+      for (var i = list.length - 1; i >= 0; i--) {
+        var e = list[i];
+        var prefix = e.barcode.length > 2 ? e.barcode.slice(0, 2) : '';
+        itemsHtml += '<li class="wagon-list-item">' +
+          '<span class="barcode-mono mono"><span class="prefix">' + escapeHtml(prefix) + '</span>' +
+          '<span class="short-hl">' + escapeHtml(e.short) + '</span></span>' +
+          '<button class="btn-x" data-idx="' + i + '" aria-label="Löschen"><i class="ti ti-x"></i></button></li>';
+      }
+      wagonListEl.innerHTML = itemsHtml;
+      wagonListEl.querySelectorAll('.btn-x').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = parseInt(btn.getAttribute('data-idx'), 10);
+          data[state.selectedWagonId].splice(idx, 1);
+          saveData();
+          renderBeladen();
+        });
+      });
+    }
+  }
+
+  /* ========== Scanning (camera) ========== */
+  var html5QrCode = null;
+  var scanning = false;
+  var lastCode = null, lastTime = 0;
+  var pendingDuplicate = null;
+
+  var scanOverlay = document.getElementById('scanOverlay');
+  var scanTargetLabel = document.getElementById('scanTargetLabel');
+  var scanToast = document.getElementById('scanToast');
+  var scanDuplicate = document.getElementById('scanDuplicate');
+  var scanDuplicateText = document.getElementById('scanDuplicateText');
+  var btnScan = document.getElementById('btnScan');
+  var btnEndScan = document.getElementById('btnEndScan');
+  var btnRebook = document.getElementById('btnRebook');
+  var btnCancelDup = document.getElementById('btnCancelDup');
+
+  var scanToastTimer = null;
+  function showScanToast(msg) {
+    scanToast.textContent = msg;
+    scanToast.classList.remove('hidden');
+    clearTimeout(scanToastTimer);
+    scanToastTimer = setTimeout(function () { scanToast.classList.add('hidden'); }, 1600);
+  }
+
+  function onScanSuccess(decodedText) {
+    var now = Date.now();
+    if (decodedText === lastCode && (now - lastTime) < 3000) return;
+    lastCode = decodedText;
+    lastTime = now;
+    handleScanResult(decodedText);
+  }
+
+  function handleScanResult(raw) {
+    var target = state.selectedWagonId;
+    var result = bookBarcode(raw, target);
+    if (result.status === 'booked') {
+      beep(); vibrate(60);
+      showScanToast(result.short + ' → ' + wagonLongLabel(target) + ' (' + result.count + ' Stück)');
+      renderBeladen();
+    } else if (result.status === 'already') {
+      showScanToast(result.short + ' bereits auf ' + wagonLongLabel(target));
+    } else if (result.status === 'duplicate') {
+      pauseScan();
+      pendingDuplicate = result;
+      scanDuplicateText.textContent = result.short + ' schon auf ' + result.existing.wagonId;
+      scanDuplicate.classList.remove('hidden');
+    }
+  }
+
+  function pauseScan() {
+    if (html5QrCode && scanning) {
+      try { html5QrCode.pause(true); } catch (e) {}
+    }
+  }
+  function resumeScan() {
+    if (html5QrCode && scanning) {
+      try { html5QrCode.resume(); } catch (e) {}
+    }
+  }
+
+  btnRebook.addEventListener('click', function () {
+    if (!pendingDuplicate) return;
+    var entry = rebook(pendingDuplicate.shortNorm, state.selectedWagonId);
+    if (entry) {
+      beep(); vibrate(60);
+      showScanToast(pendingDuplicate.short + ' → ' + wagonLongLabel(state.selectedWagonId) + ' umgebucht');
+      renderBeladen();
+    }
+    pendingDuplicate = null;
+    scanDuplicate.classList.add('hidden');
+    lastCode = null;
+    resumeScan();
+  });
+  btnCancelDup.addEventListener('click', function () {
+    pendingDuplicate = null;
+    scanDuplicate.classList.add('hidden');
+    lastCode = null;
+    resumeScan();
+  });
+
+  function selectNextWagon() {
+    var ids = wagonIds();
+    var idx = ids.indexOf(state.selectedWagonId);
+    if (idx === -1) idx = 0;
+    state.selectedWagonId = ids[(idx + 1) % ids.length];
+  }
+
+  btnScan.addEventListener('click', function () {
+    unlockAudio();
+    startScanSession();
+  });
+  btnEndScan.addEventListener('click', function () {
+    endScanSession();
+  });
+
+  function startScanSession() {
+    scanOverlay.classList.remove('hidden');
+    scanTargetLabel.textContent = 'Ziel: ' + state.selectedWagonId;
+    scanDuplicate.classList.add('hidden');
+    scanToast.classList.add('hidden');
+    pendingDuplicate = null;
+    lastCode = null;
+
+    try {
+      html5QrCode = new Html5Qrcode('qrReader', {
+        formatsToSupport: [Html5QrcodeSupportedFormats.CODE_128],
+        verbose: false
+      });
+      var config = { fps: 12, qrbox: function (vw, vh) {
+        var w = Math.min(vw * 0.85, 360);
+        var h = Math.max(90, Math.min(vh * 0.28, 170));
+        return { width: w, height: h };
+      } };
+      html5QrCode.start({ facingMode: 'environment' }, config, onScanSuccess, function () {})
+        .then(function () { scanning = true; })
+        .catch(function () {
+          showToast('Kamera konnte nicht gestartet werden.');
+          scanOverlay.classList.add('hidden');
+        });
+    } catch (err) {
+      showToast('Kamera nicht verfügbar.');
+      scanOverlay.classList.add('hidden');
+    }
+  }
+
+  function endScanSession() {
+    var p = Promise.resolve();
+    if (html5QrCode && scanning) {
+      p = html5QrCode.stop().catch(function () {});
+    }
+    p.then(function () {
+      if (html5QrCode) { try { html5QrCode.clear(); } catch (e) {} }
+      html5QrCode = null;
+      scanning = false;
+      scanOverlay.classList.add('hidden');
+      selectNextWagon();
+      renderBeladen();
+    });
+  }
+
+  /* ========== Manual entry ========== */
+  var manualInput = document.getElementById('manualInput');
+  var manualDuplicate = document.getElementById('manualDuplicate');
+  var manualDuplicateText = document.getElementById('manualDuplicateText');
+  var manualRebook = document.getElementById('manualRebook');
+  var manualCancelDup = document.getElementById('manualCancelDup');
+  var pendingManualDuplicate = null;
+
+  manualInput.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    unlockAudio();
+    var raw = manualInput.value;
+    var result = bookBarcode(raw, state.selectedWagonId);
+    if (result.status === 'booked') {
+      beep(); vibrate(60);
+      showToast(result.short + ' → ' + wagonLongLabel(state.selectedWagonId) + ' (' + result.count + ' Stück)');
+      manualInput.value = '';
+      renderBeladen();
+    } else if (result.status === 'already') {
+      showToast(result.short + ' bereits auf ' + wagonLongLabel(state.selectedWagonId));
+      manualInput.value = '';
+    } else if (result.status === 'duplicate') {
+      pendingManualDuplicate = result;
+      manualDuplicateText.textContent = result.short + ' schon auf ' + result.existing.wagonId;
+      manualDuplicate.classList.remove('hidden');
+    }
+  });
+
+  manualRebook.addEventListener('click', function () {
+    if (!pendingManualDuplicate) return;
+    var entry = rebook(pendingManualDuplicate.shortNorm, state.selectedWagonId);
+    if (entry) {
+      beep(); vibrate(60);
+      showToast(pendingManualDuplicate.short + ' → ' + wagonLongLabel(state.selectedWagonId) + ' umgebucht');
+      renderBeladen();
+    }
+    pendingManualDuplicate = null;
+    manualDuplicate.classList.add('hidden');
+    manualInput.value = '';
+    manualInput.focus();
+  });
+  manualCancelDup.addEventListener('click', function () {
+    pendingManualDuplicate = null;
+    manualDuplicate.classList.add('hidden');
+    manualInput.value = '';
+    manualInput.focus();
+  });
+
+  /* ========== Suchen ========== */
+  var searchInput = document.getElementById('searchInput');
+  var searchClear = document.getElementById('searchClear');
+  var searchResult = document.getElementById('searchResult');
+
+  function allEntries() {
+    var out = [];
+    Object.keys(data).forEach(function (id) {
+      (data[id] || []).forEach(function (e) { out.push({ wagonId: id, entry: e }); });
+    });
+    return out;
+  }
+
+  function runSearch(query) {
+    var q = query.trim();
+    if (q.length < 2) { searchResult.innerHTML = ''; return; }
+    var qn = normalize(q);
+    var all = allEntries();
+
+    var exact = all.filter(function (x) {
+      return normalize(x.entry.short) === qn || normalize(x.entry.barcode) === qn;
+    });
+    if (exact.length === 1) { renderFoundResult(exact[0]); return; }
+
+    var partial = all.filter(function (x) {
+      return normalize(x.entry.short).indexOf(qn) !== -1 || normalize(x.entry.barcode).indexOf(qn) !== -1;
+    });
+    if (partial.length === 0) { renderNotFound(q); return; }
+    if (partial.length === 1) { renderFoundResult(partial[0]); return; }
+    renderPartialList(partial);
+  }
+
+  function renderFoundResult(match) {
+    searchResult.innerHTML =
+      '<div class="result-card result-found">' +
+      '<div class="result-label">Steht auf</div>' +
+      '<div class="result-wagon">' + escapeHtml(wagonLongLabel(match.wagonId)) + '</div>' +
+      '<div class="result-barcode mono">' + escapeHtml(match.entry.barcode) + '</div>' +
+      '</div>';
+    searchInput.focus();
+    searchInput.select();
+  }
+
+  function renderNotFound(q) {
+    searchResult.innerHTML = '<div class="result-card result-notfound">Nicht gefunden: <b class="mono">' + escapeHtml(q) + '</b></div>';
+    vibrate(200);
+  }
+
+  function renderPartialList(list) {
+    var items = list.map(function (x, i) {
+      return '<li data-idx="' + i + '"><span class="mono">' + escapeHtml(x.entry.short) + '</span>' +
+        '<span class="partial-wagon">' + escapeHtml(x.wagonId) + '</span></li>';
+    }).join('');
+    searchResult.innerHTML = '<div class="result-card result-partial">' +
+      '<div class="result-partial-title">' + list.length + ' Treffer</div>' +
+      '<ul class="partial-list">' + items + '</ul></div>';
+    searchResult.querySelectorAll('.partial-list li').forEach(function (li) {
+      li.addEventListener('click', function () {
+        var idx = parseInt(li.getAttribute('data-idx'), 10);
+        renderFoundResult(list[idx]);
+      });
+    });
+  }
+
+  searchInput.addEventListener('input', function () {
+    var raw = searchInput.value;
+    var upper = raw.toUpperCase();
+    if (upper !== raw) {
+      var pos = searchInput.selectionStart;
+      searchInput.value = upper;
+      try { searchInput.setSelectionRange(pos, pos); } catch (e) {}
+    }
+    searchClear.classList.toggle('hidden', searchInput.value.length === 0);
+    runSearch(searchInput.value);
+  });
+  searchInput.addEventListener('focus', function () { document.body.classList.add('search-focused'); });
+  searchInput.addEventListener('blur', function () { document.body.classList.remove('search-focused'); });
+  searchClear.addEventListener('click', function () {
+    searchInput.value = '';
+    searchResult.innerHTML = '';
+    searchClear.classList.add('hidden');
+    searchInput.focus();
+  });
+
+  /* ========== Uebersicht ========== */
+  var uebersichtGridEl = document.getElementById('uebersichtGrid');
+  var totalCountEl = document.getElementById('totalCount');
+
+  function renderUebersicht() {
+    var ids = wagonIds();
+    var total = 0;
+    var html = '';
+    ids.forEach(function (id) {
+      var count = (data[id] || []).length;
+      total += count;
+      var cls = 'wagon-tile' + (count > 0 ? ' filled' : ' empty-grey');
+      html += '<div class="' + cls + '">' + id + '<span class="count">' + count + '</span></div>';
+    });
+    uebersichtGridEl.innerHTML = html;
+    totalCountEl.textContent = total;
+  }
+
+  /* ========== Settings ========== */
+  var settingsModal = document.getElementById('settingsModal');
+  var settingNormal = document.getElementById('settingNormal');
+  var settingE = document.getElementById('settingE');
+  document.getElementById('btnSettings').addEventListener('click', function () {
+    settingNormal.value = settings.normalCount;
+    settingE.value = settings.eCount;
+    settingsModal.classList.remove('hidden');
+  });
+  document.getElementById('settingsCancel').addEventListener('click', function () {
+    settingsModal.classList.add('hidden');
+  });
+  document.getElementById('settingsSave').addEventListener('click', function () {
+    var newNormal = Math.max(0, Math.min(99, parseInt(settingNormal.value, 10) || 0));
+    var newE = Math.max(0, Math.min(99, parseInt(settingE.value, 10) || 0));
+
+    var newIds = {};
+    for (var i = 1; i <= newNormal; i++) newIds['W' + i] = true;
+    for (var j = 1; j <= newE; j++) newIds['EW' + j] = true;
+
+    var removedWithData = Object.keys(data).filter(function (id) {
+      return !newIds[id] && (data[id] || []).length > 0;
+    });
+    if (removedWithData.length > 0) {
+      var ok = confirm('Wagen ' + removedWithData.join(', ') + ' enthalten noch Barcodes. Diese Daten werden beim Entfernen gelöscht. Fortfahren?');
+      if (!ok) return;
+    }
+    removedWithData.forEach(function (id) { delete data[id]; });
+    saveData();
+
+    settings.normalCount = newNormal;
+    settings.eCount = newE;
+    saveSettings();
+
+    var ids = wagonIds();
+    if (ids.indexOf(state.selectedWagonId) === -1) state.selectedWagonId = ids[0] || 'W1';
+
+    settingsModal.classList.add('hidden');
+    renderUebersicht();
+    renderBeladen();
+    showToast('Einstellungen gespeichert');
+  });
+
+  /* ========== End day ========== */
+  var endDayModal = document.getElementById('endDayModal');
+  var endDayTitle = document.getElementById('endDayTitle');
+  var endDayText = document.getElementById('endDayText');
+  var endDayConfirm = document.getElementById('endDayConfirm');
+  var endDayStep = 0;
+
+  document.getElementById('btnEndDay').addEventListener('click', function () {
+    endDayStep = 1;
+    endDayTitle.textContent = 'Tag beenden?';
+    endDayText.textContent = 'Alle Wagen und gescannten Barcodes werden dabei gelöscht.';
+    endDayConfirm.textContent = 'Weiter';
+    endDayConfirm.className = 'btn btn-outline btn-danger-outline';
+    endDayModal.classList.remove('hidden');
+  });
+  document.getElementById('endDayCancel').addEventListener('click', function () {
+    endDayModal.classList.add('hidden');
+    endDayStep = 0;
+  });
+  endDayConfirm.addEventListener('click', function () {
+    if (endDayStep === 1) {
+      endDayStep = 2;
+      endDayTitle.textContent = 'Wirklich ALLES löschen?';
+      endDayText.textContent = 'Diese Aktion kann nicht rückgängig gemacht werden.';
+      endDayConfirm.textContent = 'Ja, endgültig löschen';
+      endDayConfirm.className = 'btn btn-danger';
+      return;
+    }
+    data = {};
+    saveData();
+    endDayModal.classList.add('hidden');
+    endDayStep = 0;
+    renderUebersicht();
+    renderBeladen();
+    showToast('Alle Daten gelöscht');
+  });
+
+  /* ========== CSV Export ========== */
+  function csvEscape(v) {
+    v = String(v);
+    return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function formatTime(ts) {
+    var d = new Date(ts);
+    return d.toLocaleString('de-DE');
+  }
+  function dateStamp() {
+    var d = new Date();
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+  }
+  document.getElementById('btnExport').addEventListener('click', function () {
+    var rows = ['Wagen;Barcode;Kurzcode;Zeit'];
+    wagonIds().forEach(function (id) {
+      (data[id] || []).forEach(function (e) {
+        rows.push([id, e.barcode, e.short, formatTime(e.time)].map(csvEscape).join(';'));
+      });
+    });
+    var csv = rows.join('\r\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'bingo-liste-' + dateStamp() + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  });
+
+  /* ========== iOS viewport fix ========== */
+  function updateVVH() {
+    var h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--vvh', h + 'px');
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateVVH);
+    window.visualViewport.addEventListener('scroll', updateVVH);
+  }
+  window.addEventListener('resize', updateVVH);
+  updateVVH();
+
+  /* ========== Service worker ========== */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+
+  /* ========== Init ========== */
+  renderBeladen();
+  renderUebersicht();
+})();
+</script>
+</body>
+</html>

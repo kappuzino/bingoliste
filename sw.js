@@ -1,9 +1,10 @@
-const CACHE_NAME = 'bingo-liste-v1';
+const CACHE_NAME = 'bingo-liste-v2';
 
 const CORE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './vendor/xlsx.full.min.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-512-maskable.png',
@@ -15,10 +16,11 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => Promise.all(
-        CORE_ASSETS.map((url) => cache.add(url).catch(() => {}))
-      ))
+    caches.open(CACHE_NAME).then((cache) => Promise.all(
+      // cache: 'reload' umgeht den HTTP-Cache des Webspace, damit nach einem
+      // Update wirklich die neuen Dateien im Offline-Cache landen.
+      CORE_ASSETS.map((url) => cache.add(new Request(url, { cache: 'reload' })).catch(() => {}))
+    ))
   );
   self.skipWaiting();
 });

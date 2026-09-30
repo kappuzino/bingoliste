@@ -30,6 +30,8 @@
     --yellow-bg: #fff6dc;
     --yellow-text: #8a6300;
     --yellow-border: #e8c34a;
+    --violet-bg: #f1ebfb;
+    --violet-text: #5b2d9e;
 
     --bg: #ffffff;
     --surface: #ffffff;
@@ -38,6 +40,8 @@
     --text-muted: #6b6b6b;
     --tile-empty-bg: #ffffff;
     --tile-disabled-text: #bdbdbd;
+    --disabled-bg: #f2f2f2;
+    --done-bg: #f6f6f6;
     --overlay-bg: rgba(20, 20, 20, 0.92);
 
     --radius: 12px;
@@ -57,6 +61,8 @@
       --yellow-bg: #3a2f0c;
       --yellow-text: #ffd873;
       --yellow-border: #7a6120;
+      --violet-bg: #2a1d42;
+      --violet-text: #cdb6f5;
 
       --bg: #121212;
       --surface: #1a1a1a;
@@ -65,11 +71,14 @@
       --text-muted: #a0a0a0;
       --tile-empty-bg: #1a1a1a;
       --tile-disabled-text: #555555;
+      --disabled-bg: #242424;
+      --done-bg: #161616;
       --overlay-bg: rgba(0, 0, 0, 0.96);
     }
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
 
   html, body {
     margin: 0;
@@ -94,6 +103,10 @@
 
   .topbar {
     flex: 0 0 auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
     padding: 14px 16px 10px;
     border-bottom: 1px solid var(--border);
   }
@@ -102,6 +115,7 @@
     font-size: 20px;
     font-weight: 500;
   }
+  .topbar-device { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   .app-main {
     flex: 1 1 auto;
@@ -167,7 +181,9 @@
   .btn-outline.btn-danger-outline { color: var(--red-text); border-color: var(--red); background: var(--red-bg); }
   .btn-yellow { background: var(--yellow-bg); border-color: var(--yellow-border); color: var(--yellow-text); }
   .btn-block { width: 100%; }
+  .btn-lg { min-height: 60px; padding: 14px 26px; font-size: 18px; }
   .btn:active { opacity: 0.75; }
+  .btn:disabled, .icon-btn:disabled { opacity: 0.4; cursor: default; }
 
   .icon-btn {
     display: inline-flex;
@@ -181,6 +197,8 @@
     color: var(--text);
     font-size: 22px;
   }
+
+  .invalid { border-color: var(--red) !important; }
 
   /* ---- Cards ---- */
   .card {
@@ -301,6 +319,131 @@
   }
   .wagon-list-empty { padding: 20px 12px; text-align: center; color: var(--text-muted); font-size: 14px; }
 
+  /* ---- Abarbeitung ---- */
+  .ab-wrap { max-width: 920px; margin: 0 auto; }
+  .ab-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .ab-title { font-size: 17px; font-weight: 500; }
+  .ab-sub { font-size: 14px; color: var(--text-muted); margin-top: 2px; }
+  .ab-empty { text-align: center; padding: 40px 20px; }
+  .ab-empty-icon { font-size: 48px; color: var(--text-muted); }
+  .ab-empty h2 { font-size: 20px; font-weight: 500; margin: 8px 0 6px; }
+  .ab-empty p { color: var(--text-muted); margin: 0 0 20px; }
+  .ab-section { margin-top: 18px; }
+
+  .all-done {
+    background: var(--green-bg);
+    color: var(--green-text);
+    border: 1px solid var(--green);
+    border-radius: var(--radius);
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .cust-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .cust-card.hero { border: 2px solid var(--blue); padding: 18px; }
+  .cust-top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .cust-time { font-size: 20px; font-weight: 500; }
+  .hero .cust-time { font-size: 24px; }
+  .cust-ref { font-size: 18px; color: var(--text-muted); letter-spacing: 0.04em; }
+  .cust-badge { margin-left: auto; background: var(--green-bg); color: var(--green-text); border-radius: 8px; padding: 4px 10px; font-size: 14px; font-weight: 500; }
+  .cust-main { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; }
+  .cust-plate { flex: 1 1 220px; font-size: 32px; font-weight: 500; line-height: 1.15; letter-spacing: 0.02em; align-self: center; }
+  .hero .cust-plate { font-size: 44px; }
+  .cust-wagon {
+    flex: 1 1 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 44px;
+    font-weight: 500;
+    line-height: 1.1;
+    min-height: 76px;
+  }
+  .hero .cust-wagon { font-size: 64px; min-height: 104px; }
+  .wagon-ok { background: var(--green-bg); color: var(--green-text); }
+  .wagon-none { background: var(--red-bg); color: var(--red-text); font-size: 28px; }
+  .hero .wagon-none { font-size: 36px; }
+  .wagon-self { background: var(--violet-bg); color: var(--violet-text); font-size: 22px; }
+  .hero .wagon-self { font-size: 28px; }
+  .cust-info { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
+
+  .cust-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .check-row { display: flex; align-items: center; gap: 14px; min-height: 52px; font-size: 17px; cursor: pointer; }
+  .check-row input { flex: 0 0 auto; width: 30px; height: 30px; margin: 0; accent-color: var(--blue); }
+  .barcode-row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+  .barcode-row .btn { min-height: 56px; }
+  .barcode-row .icon-btn { width: 56px; height: 56px; }
+  .barcode-field {
+    flex: 1 1 200px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-height: 56px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .bf-short { font-size: 24px; font-weight: 500; color: var(--blue-text); }
+  .bf-full { font-size: 13px; color: var(--text-muted); }
+  .bf-empty { font-size: 15px; color: var(--text-muted); }
+  .barcode-row.disabled .barcode-field { background: var(--disabled-bg); }
+  .remark {
+    width: 100%;
+    min-height: 52px;
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px;
+    resize: vertical;
+  }
+  .btn-done { background: var(--green); border-color: var(--green); color: #fff; min-height: 60px; font-size: 19px; }
+
+  .cust-card.done { background: var(--done-bg); }
+  .cust-card.done .cust-time,
+  .cust-card.done .cust-plate { color: var(--text-muted); }
+  .cust-card.done .cust-plate { font-size: 22px; }
+  .cust-card.done .cust-wagon { font-size: 22px; min-height: 48px; padding: 6px 12px; flex-basis: 140px; opacity: 0.75; }
+  .done-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  .done-remark { font-size: 14px; margin-top: 2px; }
+
   /* ---- Scan overlay ---- */
   .scan-overlay {
     position: fixed;
@@ -375,7 +518,7 @@
     padding: 12px 14px;
     text-align: center;
     font-size: 14px;
-    z-index: 40;
+    z-index: 70;
     box-shadow: none;
   }
   .toast.hidden { display: none; }
@@ -465,6 +608,7 @@
   }
 
   .uebersicht-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .archive-info { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); text-align: center; }
 
   /* ---- Modal ---- */
   .modal {
@@ -484,13 +628,17 @@
     border-radius: var(--radius);
     padding: 20px;
     width: 100%;
-    max-width: 360px;
+    max-width: 400px;
   }
+  .modal-card.tone-warn { background: var(--yellow-bg); border-color: var(--yellow-border); }
+  .modal-card.tone-warn h3,
+  .modal-card.tone-warn p { color: var(--yellow-text); }
   .modal-card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 500; }
-  .modal-card p { margin: 0 0 16px; font-size: 14px; color: var(--text-muted); }
+  .modal-card p { margin: 0 0 16px; font-size: 15px; color: var(--text-muted); line-height: 1.4; }
   .modal-field { margin-bottom: 14px; }
   .modal-field label { display: block; font-size: 14px; margin-bottom: 6px; }
-  .modal-field input {
+  .modal-field input,
+  .dialog-input {
     width: 100%;
     min-height: 48px;
     padding: 10px 12px;
@@ -498,15 +646,16 @@
     border-radius: var(--radius);
     background: var(--bg);
     color: var(--text);
-    font-size: 16px;
+    font-size: 18px;
   }
+  .dialog-input { margin-bottom: 16px; }
   .modal-actions { display: flex; gap: 8px; margin-top: 6px; }
   .modal-actions .btn { flex: 1 1 0; }
 </style>
 </head>
 <body>
 <div id="app">
-  <header class="topbar"><h1>Bingo-Liste</h1></header>
+  <header class="topbar"><h1>Bingo-Liste</h1><span id="deviceLabel" class="topbar-device"></span></header>
 
   <main class="app-main">
     <!-- BELADEN -->
@@ -539,6 +688,14 @@
       <ul id="wagonList" class="wagon-list"></ul>
     </section>
 
+    <!-- ABARBEITUNG -->
+    <section id="tab-abarbeitung" class="tab-panel hidden">
+      <div class="ab-wrap">
+        <div id="abContent"></div>
+      </div>
+      <input id="importFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+    </section>
+
     <!-- SUCHEN -->
     <section id="tab-suchen" class="tab-panel hidden">
       <div class="search-top">
@@ -559,14 +716,17 @@
       </div>
       <div id="uebersichtGrid" class="uebersicht-grid"></div>
       <div class="uebersicht-actions">
-        <button id="btnExport" class="btn btn-outline btn-block"><i class="ti ti-file-spreadsheet"></i> CSV exportieren</button>
-        <button id="btnEndDay" class="btn btn-outline btn-danger-outline btn-block"><i class="ti ti-trash"></i> Tag beenden</button>
+        <button id="btnExport" class="btn btn-outline btn-block"><i class="ti ti-file-spreadsheet"></i> Wagen-CSV exportieren</button>
+        <button id="btnExportAll" class="btn btn-outline btn-block"><i class="ti ti-database-export"></i> Alles exportieren</button>
+        <button id="btnEndDay" class="btn btn-outline btn-danger-outline btn-block"><i class="ti ti-archive"></i> Tag beenden</button>
+        <p id="archiveInfo" class="archive-info"></p>
       </div>
     </section>
   </main>
 
   <nav class="tabbar">
     <button class="tab-btn active" data-tab="beladen"><i class="ti ti-barcode"></i><span>Beladen</span></button>
+    <button class="tab-btn" data-tab="abarbeitung"><i class="ti ti-list-check"></i><span>Abarbeitung</span></button>
     <button class="tab-btn" data-tab="suchen"><i class="ti ti-search"></i><span>Suchen</span></button>
     <button class="tab-btn" data-tab="uebersicht"><i class="ti ti-layout-grid"></i><span>Übersicht</span></button>
   </nav>
@@ -596,6 +756,10 @@
   <div class="modal-card">
     <h3>Einstellungen</h3>
     <div class="modal-field">
+      <label for="settingDevice">Gerätename</label>
+      <input id="settingDevice" type="text" autocomplete="off" maxlength="40">
+    </div>
+    <div class="modal-field">
       <label for="settingNormal">Normale Wagen (W)</label>
       <input id="settingNormal" type="number" min="0" max="99" inputmode="numeric">
     </div>
@@ -610,14 +774,15 @@
   </div>
 </div>
 
-<!-- End day modal -->
-<div id="endDayModal" class="modal hidden">
-  <div class="modal-card">
-    <h3 id="endDayTitle">Tag beenden?</h3>
-    <p id="endDayText">Alle Wagen und gescannten Barcodes werden dabei gelöscht.</p>
+<!-- Generic dialog (confirm / info / text input) -->
+<div id="dialogModal" class="modal hidden">
+  <div id="dialogCard" class="modal-card">
+    <h3 id="dialogTitle"></h3>
+    <p id="dialogText"></p>
+    <input id="dialogInput" class="dialog-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false" hidden>
     <div class="modal-actions">
-      <button id="endDayCancel" class="btn btn-outline">Abbrechen</button>
-      <button id="endDayConfirm" class="btn btn-danger">Weiter</button>
+      <button id="dialogCancel" class="btn btn-outline">Abbrechen</button>
+      <button id="dialogOk" class="btn btn-primary">OK</button>
     </div>
   </div>
 </div>
@@ -626,37 +791,79 @@
 (function () {
   'use strict';
 
-  /* ========== Storage & Model ========== */
-  var DATA_KEY = 'bingoListe.data.v1';
-  var SETTINGS_KEY = 'bingoListe.settings.v1';
+  /* ========== Storage (IndexedDB) ========== */
+  var DB_NAME = 'bingoListe';
+  var LEGACY_DATA_KEY = 'bingoListe.data.v1';
+  var LEGACY_SETTINGS_KEY = 'bingoListe.settings.v1';
+  var TAB_KEY = 'bingoListe.ui.tab';
+  var db = null;
 
-  function loadSettings() {
-    try {
-      var raw = localStorage.getItem(SETTINGS_KEY);
-      if (raw) {
-        var s = JSON.parse(raw);
-        if (typeof s.normalCount === 'number' && typeof s.eCount === 'number') return s;
-      }
-    } catch (e) {}
-    return { normalCount: 20, eCount: 4 };
+  function idbOpen() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function () {
+        var d = req.result;
+        if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+        if (!d.objectStoreNames.contains('archive')) d.createObjectStore('archive', { keyPath: 'id', autoIncrement: true });
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
   }
-  function saveSettings() {
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  function idbRequest(storeName, mode, fn) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(storeName, mode);
+      var req = fn(tx.objectStore(storeName));
+      tx.oncomplete = function () { resolve(req.result); };
+      tx.onerror = tx.onabort = function () { reject(tx.error); };
+    });
+  }
+  function kvGet(key) { return idbRequest('kv', 'readonly', function (s) { return s.get(key); }); }
+  function kvPut(key, value) { return idbRequest('kv', 'readwrite', function (s) { return s.put(value, key); }); }
+  function kvSet(key, value) {
+    return kvPut(key, value).catch(function () { showToast('Speichern fehlgeschlagen!', 4000); });
+  }
+  function archiveAdd(entry) { return idbRequest('archive', 'readwrite', function (s) { return s.add(entry); }); }
+  function archiveAll() { return idbRequest('archive', 'readonly', function (s) { return s.getAll(); }); }
+
+  function migrateLegacy() {
+    return kvGet('meta').then(function (meta) {
+      if (meta) return;
+      var legacyData = null, legacySettings = null;
+      try {
+        legacyData = JSON.parse(localStorage.getItem(LEGACY_DATA_KEY) || 'null');
+        legacySettings = JSON.parse(localStorage.getItem(LEGACY_SETTINGS_KEY) || 'null');
+      } catch (e) {}
+      var writes = [];
+      if (legacyData) writes.push(kvPut('wagons', legacyData));
+      if (legacySettings) writes.push(kvPut('settings', legacySettings));
+      return Promise.all(writes).then(function () {
+        return kvPut('meta', { schema: 1, migratedAt: Date.now() });
+      });
+    });
   }
 
-  function loadData() {
-    try {
-      var raw = localStorage.getItem(DATA_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {};
-  }
-  function saveData() {
-    try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch (e) {}
-  }
+  /* ========== Model ========== */
+  var DEFAULT_SETTINGS = { normalCount: 20, eCount: 4, deviceName: '' };
+  var settings = Object.assign({}, DEFAULT_SETTINGS);
+  var data = {};
+  var day = null;
+  var archive = [];
 
-  var settings = loadSettings();
-  var data = loadData();
+  function saveSettings() { kvSet('settings', settings); }
+  function saveData() { kvSet('wagons', data); }
+
+  var daySaveTimer = null;
+  function saveDay() {
+    clearTimeout(daySaveTimer);
+    daySaveTimer = null;
+    kvSet('day', day);
+  }
+  function saveDaySoon() {
+    clearTimeout(daySaveTimer);
+    daySaveTimer = setTimeout(saveDay, 400);
+  }
+  function flushDaySave() { if (daySaveTimer) saveDay(); }
 
   function wagonIds() {
     var ids = [];
@@ -729,9 +936,22 @@
     });
   }
 
+  /* ========== Dates ========== */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function deDate(iso) {
+    var p = (iso || '').split('-');
+    return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0] : '';
+  }
+  function hhmm(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
   /* ========== State ========== */
   var state = {
-    selectedWagonId: wagonIds()[0] || 'W1',
+    selectedWagonId: 'W1',
     activeTab: 'beladen'
   };
 
@@ -771,18 +991,87 @@
     toastTimer = setTimeout(function () { toastEl.classList.add('hidden'); }, ms || 2200);
   }
 
+  /* ========== Dialog (confirm / info / text) ========== */
+  var dialogModal = document.getElementById('dialogModal');
+  var dialogCard = document.getElementById('dialogCard');
+  var dialogTitle = document.getElementById('dialogTitle');
+  var dialogText = document.getElementById('dialogText');
+  var dialogInput = document.getElementById('dialogInput');
+  var dialogOk = document.getElementById('dialogOk');
+  var dialogCancel = document.getElementById('dialogCancel');
+  var dialogOpts = null;
+  var dialogResolve = null;
+
+  function openDialog(opts) {
+    if (dialogResolve) closeDialog(dialogOpts && dialogOpts.input ? null : false);
+    return new Promise(function (resolve) {
+      dialogOpts = opts;
+      dialogResolve = resolve;
+      dialogTitle.textContent = opts.title || '';
+      dialogText.textContent = opts.text || '';
+      dialogText.hidden = !opts.text;
+      dialogInput.hidden = !opts.input;
+      dialogInput.value = opts.value || '';
+      dialogInput.placeholder = opts.placeholder || '';
+      dialogInput.classList.toggle('mono', !!opts.mono);
+      dialogInput.setAttribute('autocapitalize', opts.mono ? 'characters' : 'sentences');
+      dialogInput.classList.remove('invalid');
+      dialogCancel.hidden = opts.cancel === null;
+      dialogCancel.textContent = opts.cancel || 'Abbrechen';
+      dialogOk.textContent = opts.ok || 'OK';
+      dialogOk.className = 'btn ' + ({ danger: 'btn-danger', warn: 'btn-yellow' }[opts.tone] || 'btn-primary');
+      dialogCard.className = 'modal-card' + (opts.tone === 'warn' ? ' tone-warn' : '');
+      dialogModal.classList.remove('hidden');
+      if (opts.input) dialogInput.focus();
+    });
+  }
+  function closeDialog(value) {
+    dialogModal.classList.add('hidden');
+    var resolve = dialogResolve;
+    dialogResolve = null;
+    dialogOpts = null;
+    if (resolve) resolve(value);
+  }
+  dialogOk.addEventListener('click', function () {
+    if (dialogOpts && dialogOpts.input) {
+      var v = dialogInput.value.trim();
+      if (!v && dialogOpts.required) {
+        dialogInput.classList.add('invalid');
+        dialogInput.focus();
+        return;
+      }
+      closeDialog(v);
+    } else {
+      closeDialog(true);
+    }
+  });
+  dialogCancel.addEventListener('click', function () {
+    closeDialog(dialogOpts && dialogOpts.input ? null : false);
+  });
+  dialogInput.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      dialogOk.click();
+    }
+  });
+
+  function askConfirm(opts) { return openDialog(opts); }
+  function askText(opts) { return openDialog(Object.assign({ input: true }, opts)); }
+  function showInfo(title, text) { return openDialog({ title: title, text: text, ok: 'OK', cancel: null }); }
+
   /* ========== Tabs ========== */
+  var TAB_NAMES = ['beladen', 'abarbeitung', 'suchen', 'uebersicht'];
   var tabButtons = document.querySelectorAll('.tab-btn');
   var tabPanels = {
     beladen: document.getElementById('tab-beladen'),
+    abarbeitung: document.getElementById('tab-abarbeitung'),
     suchen: document.getElementById('tab-suchen'),
     uebersicht: document.getElementById('tab-uebersicht')
   };
   function switchTab(name) {
-    if (state.activeTab === 'beladen' && name !== 'beladen' && scanning) {
-      endScanSession();
-    }
+    if (scanning) endScanSession();
     state.activeTab = name;
+    try { localStorage.setItem(TAB_KEY, name); } catch (e) {}
     Object.keys(tabPanels).forEach(function (key) {
       tabPanels[key].classList.toggle('hidden', key !== name);
     });
@@ -791,13 +1080,22 @@
     });
     if (name === 'uebersicht') renderUebersicht();
     if (name === 'beladen') renderBeladen();
+    if (name === 'abarbeitung') renderAbarbeitung();
     if (name !== 'suchen') {
       document.getElementById('searchInput').blur();
     }
   }
+  function initialTab() {
+    var saved = null;
+    try { saved = localStorage.getItem(TAB_KEY); } catch (e) {}
+    return TAB_NAMES.indexOf(saved) !== -1 ? saved : 'beladen';
+  }
   tabButtons.forEach(function (btn) {
     btn.addEventListener('click', function () { switchTab(btn.getAttribute('data-tab')); });
   });
+
+  var appMain = document.querySelector('.app-main');
+  function scrollMainTop() { appMain.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   /* ========== Beladen: Wagon grid & list ========== */
   var wagonGridEl = document.getElementById('wagonGrid');
@@ -855,8 +1153,13 @@
   }
 
   /* ========== Scanning (camera) ========== */
+  // mode 'load': Dauerscan auf den gewählten Wagen. mode 'single': ein Code, dann Callback.
   var html5QrCode = null;
   var scanning = false;
+  var startPromise = null;
+  var scanMode = 'load';
+  var singleScanCallback = null;
+  var singleScanDone = false;
   var lastCode = null, lastTime = 0;
   var pendingDuplicate = null;
 
@@ -879,6 +1182,14 @@
   }
 
   function onScanSuccess(decodedText) {
+    if (scanMode === 'single') {
+      if (singleScanDone) return;
+      singleScanDone = true;
+      beep(); vibrate(60);
+      var cb = singleScanCallback;
+      endScanSession().then(function () { if (cb) cb(decodedText); });
+      return;
+    }
     var now = Date.now();
     if (decodedText === lastCode && (now - lastTime) < 3000) return;
     lastCode = decodedText;
@@ -943,15 +1254,21 @@
 
   btnScan.addEventListener('click', function () {
     unlockAudio();
-    startScanSession();
+    startScanSession({ mode: 'load' });
   });
   btnEndScan.addEventListener('click', function () {
     endScanSession();
   });
 
-  function startScanSession() {
+  function startScanSession(opts) {
+    scanMode = opts.mode;
+    singleScanCallback = opts.onCode || null;
+    singleScanDone = false;
     scanOverlay.classList.remove('hidden');
-    scanTargetLabel.textContent = 'Ziel: ' + state.selectedWagonId;
+    scanTargetLabel.textContent = scanMode === 'single' ? opts.label : 'Ziel: ' + state.selectedWagonId;
+    btnEndScan.innerHTML = scanMode === 'single'
+      ? '<i class="ti ti-x"></i> Abbrechen'
+      : '<i class="ti ti-check"></i> Beenden';
     scanDuplicate.classList.add('hidden');
     scanToast.classList.add('hidden');
     pendingDuplicate = null;
@@ -967,9 +1284,11 @@
         var h = Math.max(90, Math.min(vh * 0.28, 170));
         return { width: w, height: h };
       } };
-      html5QrCode.start({ facingMode: 'environment' }, config, onScanSuccess, function () {})
+      startPromise = html5QrCode.start({ facingMode: 'environment' }, config, onScanSuccess, function () {})
         .then(function () { scanning = true; })
         .catch(function () {
+          html5QrCode = null;
+          scanning = false;
           showToast('Kamera konnte nicht gestartet werden.');
           scanOverlay.classList.add('hidden');
         });
@@ -980,17 +1299,20 @@
   }
 
   function endScanSession() {
-    var p = Promise.resolve();
-    if (html5QrCode && scanning) {
-      p = html5QrCode.stop().catch(function () {});
-    }
-    p.then(function () {
-      if (html5QrCode) { try { html5QrCode.clear(); } catch (e) {} }
-      html5QrCode = null;
+    var qr = html5QrCode;
+    var mode = scanMode;
+    return (startPromise || Promise.resolve()).then(function () {
+      if (qr && scanning) return qr.stop().catch(function () {});
+    }).then(function () {
+      if (qr) { try { qr.clear(); } catch (e) {} }
+      if (html5QrCode === qr) html5QrCode = null;
       scanning = false;
+      startPromise = null;
       scanOverlay.classList.add('hidden');
-      selectNextWagon();
-      renderBeladen();
+      if (mode === 'load') {
+        selectNextWagon();
+        renderBeladen();
+      }
     });
   }
 
@@ -1041,6 +1363,440 @@
     manualDuplicate.classList.add('hidden');
     manualInput.value = '';
     manualInput.focus();
+  });
+
+  /* ========== Import (Excel-Tagesliste) ========== */
+  var SELF_DELIVERY = 'SELBSTANLIEFERER';
+
+  function emptyResult() {
+    return { selfStorage: false, newBarcode: null, barcodeTime: null, doneTime: null, remark: '' };
+  }
+  function hasResult(c) {
+    var r = c.result;
+    return r.selfStorage || !!r.newBarcode || !!r.doneTime || !!r.remark;
+  }
+  function customerKey(c) {
+    return c.selfDelivery ? 'S|' + normalize(c.plate) : 'R|' + normalize(c.ref);
+  }
+
+  function excelSerialToIso(serial, date1904) {
+    var days = Math.floor(serial) + (date1904 ? 1462 : 0);
+    var d = new Date(Date.UTC(1899, 11, 30) + days * 86400000);
+    return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate());
+  }
+  function parseTimeCell(v, date1904) {
+    if (typeof v === 'number' && isFinite(v)) {
+      return {
+        minutes: Math.round((v - Math.floor(v)) * 1440) % 1440,
+        date: v >= 1 ? excelSerialToIso(v, date1904) : null
+      };
+    }
+    var m = String(v === null || v === undefined ? '' : v).match(/(\d{1,2})[:.](\d{2})/);
+    if (m) return { minutes: parseInt(m[1], 10) * 60 + parseInt(m[2], 10), date: null };
+    return { minutes: null, date: null };
+  }
+  function minutesToHHMM(m) { return m === null ? '' : pad2(Math.floor(m / 60)) + ':' + pad2(m % 60); }
+
+  function validIso(y, mo, d) {
+    var dt = new Date(y, mo - 1, d);
+    return (dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d) ? isoDate(dt) : null;
+  }
+  function dateFromFileName(name) {
+    var m = name.match(/(\d{1,2})[-_.](\d{1,2})[-_.](\d{4})/);
+    if (m) return validIso(+m[3], +m[2], +m[1]);
+    m = name.match(/(\d{4})[-_.](\d{1,2})[-_.](\d{1,2})/);
+    if (m) return validIso(+m[1], +m[2], +m[3]);
+    return null;
+  }
+
+  function cellText(v) { return v === null || v === undefined ? '' : String(v).trim(); }
+
+  function parseRows(rows, fileName, date1904) {
+    if (!rows.length) return { error: 'Die Datei ist leer.' };
+    var header = rows[0].map(function (h) { return cellText(h).toLowerCase(); });
+    function col(names) {
+      for (var i = 0; i < names.length; i++) {
+        var k = header.indexOf(names[i]);
+        if (k !== -1) return k;
+      }
+      return -1;
+    }
+    var cTime = col(['uhrzeit', 'zeit']);
+    var cPlate = col(['kennzeichen']);
+    var cRef = col(['referenznummer', 'referenz']);
+    var cInfo = col(['zusatzinfo', 'zusatz']);
+    var missing = [];
+    if (cTime < 0) missing.push('Uhrzeit');
+    if (cPlate < 0) missing.push('Kennzeichen');
+    if (cRef < 0) missing.push('Referenznummer');
+    if (missing.length) {
+      return { error: 'Spalte fehlt: ' + missing.join(', ') + '. Erwartet in Zeile 1: Uhrzeit, Kennzeichen, Referenznummer, Zusatzinfo.' };
+    }
+
+    var customers = [];
+    var cellDate = null;
+    for (var r = 1; r < rows.length; r++) {
+      var row = rows[r] || [];
+      var plate = cellText(row[cPlate]);
+      var ref = cellText(row[cRef]);
+      if (!plate && !ref) continue;
+      var t = parseTimeCell(row[cTime], date1904);
+      if (t.date && !cellDate) cellDate = t.date;
+      customers.push({
+        id: 'c' + customers.length,
+        order: customers.length,
+        minutes: t.minutes,
+        time: minutesToHHMM(t.minutes),
+        plate: plate,
+        ref: ref,
+        info: cInfo >= 0 ? cellText(row[cInfo]) : '',
+        selfDelivery: ref.toUpperCase() === SELF_DELIVERY,
+        result: emptyResult()
+      });
+    }
+    if (!customers.length) return { error: 'In der Datei wurden keine Termine gefunden.' };
+    return {
+      date: cellDate || dateFromFileName(fileName) || isoDate(new Date()),
+      fileName: fileName,
+      customers: customers
+    };
+  }
+
+  var sheetJsPromise = null;
+  function loadSheetJs() {
+    if (window.XLSX) return Promise.resolve();
+    if (!sheetJsPromise) {
+      sheetJsPromise = new Promise(function (resolve, reject) {
+        var s = document.createElement('script');
+        s.src = 'vendor/xlsx.full.min.js';
+        s.onload = resolve;
+        s.onerror = function () { sheetJsPromise = null; reject(new Error('SheetJS nicht ladbar')); };
+        document.head.appendChild(s);
+      });
+    }
+    return sheetJsPromise;
+  }
+  function readFileAsArrayBuffer(file) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(fr.result); };
+      fr.onerror = function () { reject(fr.error); };
+      fr.readAsArrayBuffer(file);
+    });
+  }
+
+  async function importFile(file) {
+    var parsed;
+    try {
+      await loadSheetJs();
+      var buf = await readFileAsArrayBuffer(file);
+      var wb = XLSX.read(buf, { type: 'array' });
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: false });
+      var date1904 = !!(wb.Workbook && wb.Workbook.WBProps && wb.Workbook.WBProps.date1904);
+      parsed = parseRows(rows, file.name, date1904);
+    } catch (e) {
+      await showInfo('Import fehlgeschlagen', 'Die Datei konnte nicht gelesen werden. Bitte eine .xlsx-Datei wählen.');
+      return;
+    }
+    if (parsed.error) {
+      await showInfo('Import fehlgeschlagen', parsed.error);
+      return;
+    }
+
+    var alreadyEnded = archive.some(function (e) { return e.reason === 'tag-beendet' && e.date === parsed.date; });
+    if (alreadyEnded) {
+      var goOn = await askConfirm({
+        title: 'Tag bereits beendet',
+        text: 'Für den ' + deDate(parsed.date) + ' wurde schon ein Tag archiviert. Liste trotzdem importieren?',
+        ok: 'Importieren'
+      });
+      if (!goOn) return;
+    }
+    if (day) {
+      var sameDate = day.date === parsed.date;
+      var replace = await askConfirm({
+        title: 'Liste ersetzen?',
+        text: sameDate
+          ? 'Die Liste vom ' + deDate(day.date) + ' ist bereits geladen. Erfasste Ergebnisse bleiben bei gleicher Referenz erhalten.'
+          : 'Aktuell ist die Liste vom ' + deDate(day.date) + ' geladen. Sie wird archiviert und durch die Liste vom ' + deDate(parsed.date) + ' ersetzt.',
+        ok: 'Liste ersetzen'
+      });
+      if (!replace) return;
+    }
+
+    try {
+      await applyImport(parsed);
+    } catch (e) {
+      await showInfo('Import fehlgeschlagen', 'Die bisherige Liste konnte nicht archiviert werden. Es wurde nichts geändert.');
+      return;
+    }
+    renderAbarbeitung();
+    scrollMainTop();
+    showToast(parsed.customers.length + ' Termine vom ' + deDate(parsed.date) + ' importiert');
+  }
+
+  // Gleiches Datum: Ergebnisse per Referenz übernehmen, nicht mehr gelistete Kunden mit
+  // Ergebnis archivieren. Anderes Datum: bisherige Liste komplett archivieren.
+  function applyImport(parsed) {
+    var toArchive = null;
+    if (day) {
+      if (day.date === parsed.date) {
+        var pool = {};
+        day.customers.forEach(function (c) {
+          if (!hasResult(c)) return;
+          var k = customerKey(c);
+          (pool[k] = pool[k] || []).push(c);
+        });
+        parsed.customers.forEach(function (nc) {
+          var q = pool[customerKey(nc)];
+          if (q && q.length) nc.result = q.shift().result;
+        });
+        var dropped = [];
+        Object.keys(pool).forEach(function (k) { dropped = dropped.concat(pool[k]); });
+        if (dropped.length) toArchive = archiveEntryFor(day, dropped, 'ersetzt', false);
+      } else {
+        toArchive = archiveEntryFor(day, day.customers, 'ersetzt', false);
+      }
+    }
+    return (toArchive ? addToArchive(toArchive) : Promise.resolve()).then(function () {
+      day = { date: parsed.date, fileName: parsed.fileName, importedAt: Date.now(), customers: parsed.customers };
+      saveDay();
+    });
+  }
+
+  /* ========== Archiv ========== */
+  function archiveEntryFor(dayObj, customers, reason, includeWagons) {
+    return {
+      reason: reason,
+      date: dayObj ? dayObj.date : isoDate(new Date()),
+      fileName: dayObj ? dayObj.fileName : null,
+      importedAt: dayObj ? dayObj.importedAt : null,
+      deviceName: settings.deviceName,
+      archivedAt: Date.now(),
+      customers: customers.map(function (c) {
+        var copy = JSON.parse(JSON.stringify(c));
+        copy.wagon = wagonForCustomer(c);
+        return copy;
+      }),
+      wagons: includeWagons ? JSON.parse(JSON.stringify(data)) : null
+    };
+  }
+  function addToArchive(entry) {
+    return archiveAdd(entry).then(function (id) {
+      entry.id = id;
+      archive.push(entry);
+      renderArchiveInfo();
+    });
+  }
+
+  /* ========== Abarbeitung ========== */
+  var abContent = document.getElementById('abContent');
+  var importFileInput = document.getElementById('importFile');
+
+  function wagonForCustomer(c) {
+    if (c.selfDelivery || !c.ref) return null;
+    var loc = findLocation(normalize(c.ref));
+    return loc ? loc.wagonId : null;
+  }
+  function canComplete(c) { return c.result.selfStorage || !!c.result.newBarcode; }
+  function customerById(id) {
+    if (!day) return null;
+    for (var i = 0; i < day.customers.length; i++) {
+      if (day.customers[i].id === id) return day.customers[i];
+    }
+    return null;
+  }
+  function cardCustomer(el) {
+    var card = el.closest('[data-cid]');
+    return card ? customerById(card.getAttribute('data-cid')) : null;
+  }
+  function sortedCustomers() {
+    return day.customers.slice().sort(function (a, b) {
+      var am = a.minutes === null ? 1e9 : a.minutes;
+      var bm = b.minutes === null ? 1e9 : b.minutes;
+      return (am - bm) || (a.order - b.order);
+    });
+  }
+
+  function customerCard(c, hero) {
+    var r = c.result;
+    var isDone = !!r.doneTime;
+    var wagon = wagonForCustomer(c);
+    var wagonHtml;
+    if (c.selfDelivery) wagonHtml = '<div class="cust-wagon wagon-self">Kunde bringt Reifen mit</div>';
+    else if (wagon) wagonHtml = '<div class="cust-wagon wagon-ok">' + escapeHtml(wagonLongLabel(wagon)) + '</div>';
+    else wagonHtml = '<div class="cust-wagon wagon-none">Kein Wagen</div>';
+
+    var h = '<article class="cust-card' + (hero ? ' hero' : '') + (isDone ? ' done' : '') + '" data-cid="' + c.id + '">';
+    h += '<div class="cust-top"><span class="cust-time">' + escapeHtml(c.time || '–') + '</span>' +
+      (c.selfDelivery ? '' : '<span class="cust-ref mono">' + escapeHtml(c.ref) + '</span>') +
+      (isDone ? '<span class="cust-badge">Erledigt ' + hhmm(r.doneTime) + '</span>' : '') + '</div>';
+    h += '<div class="cust-main"><div class="cust-plate">' + escapeHtml(c.plate) + '</div>' + wagonHtml + '</div>';
+    if (c.info) h += '<div class="cust-info">' + escapeHtml(c.info) + '</div>';
+
+    if (isDone) {
+      var summary = r.selfStorage
+        ? 'Selbsteinlagerung'
+        : 'Neuer Barcode <span class="mono">' + escapeHtml(shortOf(r.newBarcode)) + '</span>';
+      h += '<div class="done-row"><div>' + summary +
+        (r.remark ? '<div class="done-remark">' + escapeHtml(r.remark) + '</div>' : '') + '</div>' +
+        '<button class="btn btn-outline" data-action="undo"><i class="ti ti-arrow-back-up"></i> Rückgängig</button></div>';
+      return h + '</article>';
+    }
+
+    var locked = r.selfStorage;
+    var field = r.newBarcode
+      ? '<span class="bf-short mono">' + escapeHtml(shortOf(r.newBarcode)) + '</span><span class="bf-full mono">' + escapeHtml(r.newBarcode) + '</span>'
+      : '<span class="bf-empty">' + (locked ? 'Kein neuer Barcode nötig' : 'Noch kein neuer Barcode') + '</span>';
+    var dis = locked ? ' disabled' : '';
+    h += '<div class="cust-controls">' +
+      '<label class="check-row"><input type="checkbox" data-action="self-storage"' + (locked ? ' checked' : '') + '>' +
+        '<span>Selbsteinlagerung (Kunde nimmt alte Reifen mit)</span></label>' +
+      '<div class="barcode-row' + (locked ? ' disabled' : '') + '">' +
+        '<div class="barcode-field">' + field + '</div>' +
+        '<button class="btn btn-primary" data-action="scan-new"' + dis + '><i class="ti ti-camera"></i> Neuen Barcode scannen</button>' +
+        '<button class="icon-btn" data-action="edit-new" aria-label="Barcode von Hand eingeben"' + dis + '><i class="ti ti-pencil"></i></button>' +
+      '</div>' +
+      '<textarea class="remark" data-action="remark" rows="1" placeholder="Bemerkung">' + escapeHtml(r.remark || '') + '</textarea>' +
+      '<button class="btn btn-done btn-block" data-action="done"' + (canComplete(c) ? '' : ' disabled') + '><i class="ti ti-check"></i> Erledigt</button>' +
+      '</div>';
+    return h + '</article>';
+  }
+
+  function renderAbarbeitung() {
+    if (!day) {
+      abContent.innerHTML = '<div class="card ab-empty">' +
+        '<i class="ti ti-file-spreadsheet ab-empty-icon"></i>' +
+        '<h2>Noch keine Tagesliste</h2>' +
+        '<p>Terminübersicht als .xlsx importieren (Dateien / OneDrive).</p>' +
+        '<button class="btn btn-primary btn-lg" data-action="import"><i class="ti ti-file-import"></i> Liste importieren</button>' +
+        '</div>';
+      return;
+    }
+    var list = sortedCustomers();
+    var open = list.filter(function (c) { return !c.result.doneTime; });
+    var done = list.filter(function (c) { return !!c.result.doneTime; });
+
+    var html = '<div class="ab-header"><div>' +
+      '<div class="ab-title">Liste vom ' + deDate(day.date) + '</div>' +
+      '<div class="ab-sub">' + done.length + ' von ' + list.length + ' erledigt</div></div>' +
+      '<button class="btn btn-outline" data-action="import"><i class="ti ti-file-import"></i> Liste importieren</button></div>';
+
+    html += '<div class="section-title">Nächster Kunde</div>';
+    html += open.length ? customerCard(open[0], true) : '<div class="all-done">Alle Kunden erledigt</div>';
+    if (open.length > 1) {
+      html += '<div class="ab-section section-title">Weitere Kunden (' + (open.length - 1) + ')</div>' +
+        open.slice(1).map(function (c) { return customerCard(c, false); }).join('');
+    }
+    if (done.length) {
+      html += '<div class="ab-section section-title">Erledigt (' + done.length + ')</div>' +
+        done.map(function (c) { return customerCard(c, false); }).join('');
+    }
+    abContent.innerHTML = html;
+  }
+
+  function barcodeConflicts(c, code) {
+    var sn = normalize(shortOf(code));
+    var out = [];
+    day.customers.forEach(function (o) {
+      if (o !== c && o.result.newBarcode && normalize(shortOf(o.result.newBarcode)) === sn) {
+        out.push('ist heute schon bei ' + o.plate + (o.time ? ' (' + o.time + ')' : '') + ' vergeben');
+      }
+    });
+    var loc = findLocation(sn);
+    if (loc) out.push('ist ein geladener Reifen auf ' + loc.wagonId);
+    return out;
+  }
+
+  function setNewBarcode(c, raw) {
+    var code = (raw || '').trim();
+    if (!code) return;
+    var conflicts = barcodeConflicts(c, code);
+    var go = conflicts.length
+      ? askConfirm({
+          tone: 'warn',
+          title: 'Barcode doppelt',
+          text: shortOf(code) + ' ' + conflicts.join(' und ') + '.',
+          ok: 'Trotzdem übernehmen'
+        })
+      : Promise.resolve(true);
+    go.then(function (ok) {
+      if (!ok) return;
+      c.result.newBarcode = code;
+      c.result.barcodeTime = Date.now();
+      c.result.selfStorage = false;
+      saveDay();
+      renderAbarbeitung();
+    });
+  }
+
+  abContent.addEventListener('click', function (ev) {
+    var btn = ev.target.closest('[data-action]');
+    if (!btn || btn.disabled) return;
+    var action = btn.getAttribute('data-action');
+    if (action === 'import') {
+      importFileInput.click();
+      return;
+    }
+    var c = cardCustomer(btn);
+    if (!c) return;
+    if (action === 'scan-new') {
+      unlockAudio();
+      startScanSession({
+        mode: 'single',
+        label: 'Neuer Barcode · ' + c.plate,
+        onCode: function (code) { setNewBarcode(c, code); }
+      });
+    } else if (action === 'edit-new') {
+      askText({
+        title: 'Neuer Barcode',
+        text: c.plate + ': Barcode eintippen oder mit dem Handscanner scannen.',
+        placeholder: 'Barcode',
+        mono: true,
+        value: c.result.newBarcode || '',
+        ok: 'Übernehmen'
+      }).then(function (v) { if (v) setNewBarcode(c, v); });
+    } else if (action === 'done') {
+      var wasHero = !!btn.closest('.hero');
+      c.result.doneTime = Date.now();
+      saveDay();
+      renderAbarbeitung();
+      if (wasHero) scrollMainTop();
+    } else if (action === 'undo') {
+      c.result.doneTime = null;
+      saveDay();
+      renderAbarbeitung();
+    }
+  });
+  abContent.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.getAttribute('data-action') !== 'self-storage') return;
+    var c = cardCustomer(el);
+    if (!c) return;
+    c.result.selfStorage = el.checked;
+    if (el.checked) {
+      c.result.newBarcode = null;
+      c.result.barcodeTime = null;
+    }
+    saveDay();
+    renderAbarbeitung();
+  });
+  abContent.addEventListener('input', function (ev) {
+    var el = ev.target;
+    if (el.getAttribute('data-action') !== 'remark') return;
+    var c = cardCustomer(el);
+    if (!c) return;
+    c.result.remark = el.value;
+    saveDaySoon();
+  });
+  abContent.addEventListener('focusout', function (ev) {
+    if (ev.target.getAttribute && ev.target.getAttribute('data-action') === 'remark') flushDaySave();
+  });
+  importFileInput.addEventListener('change', function () {
+    var file = importFileInput.files && importFileInput.files[0];
+    importFileInput.value = '';
+    if (file) importFile(file);
   });
 
   /* ========== Suchen ========== */
@@ -1106,7 +1862,7 @@
     });
   }
 
-  /* Suche gilt als "abgeschlossen" 2s nach der letzten Eingabe, oder sofort bei
+  /* Suche gilt als "abgeschlossen" 4s nach der letzten Eingabe, oder sofort bei
      Enter/Fertig. Ist sie abgeschlossen, startet das naechste getippte Zeichen
      eine komplett neue Suche (Feld wird geleert); Backspace dagegen setzt nur
      die Bearbeitung fort und leert nie von selbst. */
@@ -1115,7 +1871,7 @@
 
   function armCompletionTimer() {
     clearTimeout(completeTimer);
-    completeTimer = setTimeout(function () { searchCompleted = true; }, 5000);
+    completeTimer = setTimeout(function () { searchCompleted = true; }, 4000);
   }
   function markCompletedNow() {
     clearTimeout(completeTimer);
@@ -1175,6 +1931,8 @@
   /* ========== Uebersicht ========== */
   var uebersichtGridEl = document.getElementById('uebersichtGrid');
   var totalCountEl = document.getElementById('totalCount');
+  var archiveInfoEl = document.getElementById('archiveInfo');
+  var deviceLabelEl = document.getElementById('deviceLabel');
 
   function renderUebersicht() {
     var ids = wagonIds();
@@ -1188,13 +1946,23 @@
     });
     uebersichtGridEl.innerHTML = html;
     totalCountEl.textContent = total;
+    renderArchiveInfo();
   }
+  function renderArchiveInfo() {
+    var days = archive.filter(function (e) { return e.reason === 'tag-beendet'; }).length;
+    archiveInfoEl.textContent = 'Archiv: ' + days + (days === 1 ? ' Tag' : ' Tage') +
+      (settings.deviceName ? ' · Gerät: ' + settings.deviceName : '');
+  }
+  function renderDeviceLabel() { deviceLabelEl.textContent = settings.deviceName; }
 
   /* ========== Settings ========== */
   var settingsModal = document.getElementById('settingsModal');
+  var settingDevice = document.getElementById('settingDevice');
   var settingNormal = document.getElementById('settingNormal');
   var settingE = document.getElementById('settingE');
   document.getElementById('btnSettings').addEventListener('click', function () {
+    settingDevice.value = settings.deviceName;
+    settingDevice.classList.remove('invalid');
     settingNormal.value = settings.normalCount;
     settingE.value = settings.eCount;
     settingsModal.classList.remove('hidden');
@@ -1203,6 +1971,12 @@
     settingsModal.classList.add('hidden');
   });
   document.getElementById('settingsSave').addEventListener('click', function () {
+    var newDevice = settingDevice.value.trim();
+    if (!newDevice) {
+      settingDevice.classList.add('invalid');
+      settingDevice.focus();
+      return;
+    }
     var newNormal = Math.max(0, Math.min(99, parseInt(settingNormal.value, 10) || 0));
     var newE = Math.max(0, Math.min(99, parseInt(settingE.value, 10) || 0));
 
@@ -1220,6 +1994,7 @@
     removedWithData.forEach(function (id) { delete data[id]; });
     saveData();
 
+    settings.deviceName = newDevice;
     settings.normalCount = newNormal;
     settings.eCount = newE;
     saveSettings();
@@ -1228,52 +2003,78 @@
     if (ids.indexOf(state.selectedWagonId) === -1) state.selectedWagonId = ids[0] || 'W1';
 
     settingsModal.classList.add('hidden');
+    renderDeviceLabel();
     renderUebersicht();
     renderBeladen();
     showToast('Einstellungen gespeichert');
   });
 
-  /* ========== End day ========== */
-  var endDayModal = document.getElementById('endDayModal');
-  var endDayTitle = document.getElementById('endDayTitle');
-  var endDayText = document.getElementById('endDayText');
-  var endDayConfirm = document.getElementById('endDayConfirm');
-  var endDayStep = 0;
+  function askDeviceName() {
+    askText({
+      title: 'Gerätename',
+      text: 'Wie heißt dieses Gerät? Der Name steht später im Export, z. B. „iPad Annahme“.',
+      placeholder: 'Gerätename',
+      required: true,
+      cancel: null,
+      ok: 'Speichern'
+    }).then(function (name) {
+      if (!name) return;
+      settings.deviceName = name;
+      saveSettings();
+      renderDeviceLabel();
+      renderArchiveInfo();
+    });
+  }
 
+  /* ========== Tag beenden (archivieren) ========== */
   document.getElementById('btnEndDay').addEventListener('click', function () {
-    endDayStep = 1;
-    endDayTitle.textContent = 'Tag beenden?';
-    endDayText.textContent = 'Alle Wagen und gescannten Barcodes werden dabei gelöscht.';
-    endDayConfirm.textContent = 'Weiter';
-    endDayConfirm.className = 'btn btn-outline btn-danger-outline';
-    endDayModal.classList.remove('hidden');
-  });
-  document.getElementById('endDayCancel').addEventListener('click', function () {
-    endDayModal.classList.add('hidden');
-    endDayStep = 0;
-  });
-  endDayConfirm.addEventListener('click', function () {
-    if (endDayStep === 1) {
-      endDayStep = 2;
-      endDayTitle.textContent = 'Wirklich ALLES löschen?';
-      endDayText.textContent = 'Diese Aktion kann nicht rückgängig gemacht werden.';
-      endDayConfirm.textContent = 'Ja, endgültig löschen';
-      endDayConfirm.className = 'btn btn-danger';
+    var hasWagons = Object.keys(data).some(function (k) { return (data[k] || []).length > 0; });
+    if (!day && !hasWagons) {
+      showToast('Nichts zu archivieren');
       return;
     }
-    data = {};
-    saveData();
-    endDayModal.classList.add('hidden');
-    endDayStep = 0;
-    renderUebersicht();
-    renderBeladen();
-    showToast('Alle Daten gelöscht');
+    var openCount = day ? day.customers.filter(function (c) { return !c.result.doneTime; }).length : 0;
+    askConfirm({
+      title: 'Tag beenden?',
+      text: 'Liste, Wagen und Ergebnisse werden archiviert und bleiben im Export erhalten. Danach sind Wagen und Liste leer.' +
+        (openCount ? ' Noch ' + openCount + ' Kunden offen.' : ''),
+      ok: 'Weiter',
+      tone: 'danger'
+    }).then(function (ok) {
+      if (!ok) return false;
+      return askConfirm({
+        title: 'Wirklich beenden?',
+        text: 'Wagen und Tagesliste werden jetzt geleert.',
+        ok: 'Ja, Tag beenden',
+        tone: 'danger'
+      });
+    }).then(function (ok) {
+      if (ok) endDay();
+    });
   });
+
+  function endDay() {
+    flushDaySave();
+    var entry = archiveEntryFor(day, day ? day.customers : [], 'tag-beendet', true);
+    addToArchive(entry).then(function () {
+      data = {};
+      day = null;
+      saveData();
+      saveDay();
+      renderUebersicht();
+      renderBeladen();
+      renderAbarbeitung();
+      showToast('Tag archiviert');
+    }, function () {
+      showInfo('Archivieren fehlgeschlagen', 'Es wurde nichts geleert.');
+    });
+  }
 
   /* ========== CSV Export ========== */
   function csvEscape(v) {
-    v = String(v);
-    return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+    v = v === null || v === undefined ? '' : String(v);
+    if (/^[=+\-@]/.test(v)) v = "'" + v;
+    return /[;"\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }
   function formatTime(ts) {
     var d = new Date(ts);
@@ -1281,9 +2082,37 @@
   }
   function dateStamp() {
     var d = new Date();
-    function pad(n) { return (n < 10 ? '0' : '') + n; }
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes());
+    return isoDate(d) + '_' + pad2(d.getHours()) + pad2(d.getMinutes());
   }
+  function fileSafe(s) {
+    return (s || '').replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g, '-').replace(/^-+|-+$/g, '') || 'geraet';
+  }
+
+  function deliverCsv(fileName, text) {
+    var blob = new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' });
+    var file = typeof File === 'function' ? new File([blob], fileName, { type: 'text/csv' }) : null;
+    var touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    // iPad/iPhone: Teilen-Dialog (Dateien, OneDrive, Mail); Blob-Downloads sind in
+    // installierten iOS-PWAs unzuverlässig.
+    if (file && touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: fileName }).catch(function (err) {
+        if (err && err.name !== 'AbortError') downloadBlob(fileName, blob);
+      });
+      return;
+    }
+    downloadBlob(fileName, blob);
+  }
+  function downloadBlob(fileName, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
   document.getElementById('btnExport').addEventListener('click', function () {
     var rows = ['Wagen;Barcode;Kurzcode;Zeit'];
     wagonIds().forEach(function (id) {
@@ -1291,17 +2120,66 @@
         rows.push([id, e.barcode, e.short, formatTime(e.time)].map(csvEscape).join(';'));
       });
     });
-    var csv = rows.join('\r\n');
-    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'bingo-liste-' + dateStamp() + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+    deliverCsv('bingo-liste-' + dateStamp() + '.csv', rows.join('\r\n'));
   });
+
+  function exportAll() {
+    flushDaySave();
+    var groups = archive.map(function (e) {
+      return { device: e.deviceName, date: e.date, customers: e.customers, live: false };
+    });
+    if (day) groups.push({ device: settings.deviceName, date: day.date, customers: day.customers, live: true });
+
+    var rows = [];
+    groups.forEach(function (g) {
+      g.customers.forEach(function (c) {
+        var wagon = g.live ? wagonForCustomer(c) : c.wagon;
+        rows.push({
+          device: g.device || '',
+          date: g.date,
+          c: c,
+          wagon: c.selfDelivery ? '' : (wagon || 'kein Wagen'),
+          since: ''
+        });
+      });
+    });
+    if (!rows.length) {
+      showToast('Noch keine Daten zum Exportieren');
+      return;
+    }
+
+    var byDay = {};
+    rows.forEach(function (row) {
+      if (!row.c.result.doneTime) return;
+      var k = row.device + '|' + row.date;
+      (byDay[k] = byDay[k] || []).push(row);
+    });
+    Object.keys(byDay).forEach(function (k) {
+      var list = byDay[k].sort(function (a, b) { return a.c.result.doneTime - b.c.result.doneTime; });
+      for (var i = 1; i < list.length; i++) {
+        list[i].since = Math.round((list[i].c.result.doneTime - list[i - 1].c.result.doneTime) / 60000);
+      }
+    });
+
+    function planMinutes(row) { return row.c.minutes === null ? 1e9 : row.c.minutes; }
+    rows.sort(function (a, b) {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (planMinutes(a) - planMinutes(b)) || (a.c.order - b.c.order);
+    });
+
+    function yesNo(b) { return b ? 'ja' : 'nein'; }
+    var lines = ['Gerät;Datum;Uhrzeit Plan;Kennzeichen;Referenz;Zusatzinfo;Wagen;Selbstanlieferer;Selbsteinlagerung;Neuer Barcode;Zeit Barcode;Zeit Erledigt;Min. seit vorherigem Erledigt;Bemerkung'];
+    rows.forEach(function (row) {
+      var c = row.c, r = c.result;
+      lines.push([
+        row.device, deDate(row.date), c.time, c.plate, c.ref, c.info, row.wagon,
+        yesNo(c.selfDelivery), yesNo(r.selfStorage), r.newBarcode || '',
+        hhmm(r.barcodeTime), hhmm(r.doneTime), row.since, r.remark || ''
+      ].map(csvEscape).join(';'));
+    });
+    deliverCsv('bingo-alles_' + fileSafe(settings.deviceName) + '_' + isoDate(new Date()) + '.csv', lines.join('\r\n'));
+  }
+  document.getElementById('btnExportAll').addEventListener('click', exportAll);
 
   /* ========== iOS viewport fix ========== */
   function updateVVH() {
@@ -1315,16 +2193,39 @@
   window.addEventListener('resize', updateVVH);
   updateVVH();
 
+  window.addEventListener('pagehide', flushDaySave);
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') flushDaySave();
+  });
+
   /* ========== Service worker ========== */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
+      navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
     });
   }
 
   /* ========== Init ========== */
-  renderBeladen();
-  renderUebersicht();
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(function () {});
+  }
+  idbOpen()
+    .then(function (d) { db = d; return migrateLegacy(); })
+    .then(function () { return Promise.all([kvGet('settings'), kvGet('wagons'), kvGet('day'), archiveAll()]); })
+    .then(function (res) {
+      settings = Object.assign({}, DEFAULT_SETTINGS, res[0] || {});
+      data = res[1] || {};
+      day = res[2] || null;
+      archive = res[3] || [];
+      state.selectedWagonId = wagonIds()[0] || 'W1';
+      renderDeviceLabel();
+      switchTab(initialTab());
+      renderUebersicht();
+      if (!settings.deviceName) askDeviceName();
+    })
+    .catch(function () {
+      showInfo('Speicher nicht verfügbar', 'Die lokale Datenbank konnte nicht geöffnet werden. Bitte nicht im privaten Modus verwenden.');
+    });
 })();
 </script>
 </body>

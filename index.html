@@ -32,6 +32,9 @@
     --yellow-border: #e8c34a;
     --violet-bg: #f1ebfb;
     --violet-text: #5b2d9e;
+    --orange: #c75a0a;
+    --orange-bg: #fff1e6;
+    --orange-text: #9a4300;
 
     --bg: #ffffff;
     --surface: #ffffff;
@@ -63,6 +66,9 @@
       --yellow-border: #7a6120;
       --violet-bg: #2a1d42;
       --violet-text: #cdb6f5;
+      --orange: #d9732a;
+      --orange-bg: #3a2410;
+      --orange-text: #ffb27a;
 
       --bg: #121212;
       --surface: #1a1a1a;
@@ -469,8 +475,25 @@
   .cust-card.done { background: var(--done-bg); }
   .cust-card.done .cust-time,
   .cust-card.done .cust-plate { color: var(--text-muted); }
-  .cust-card.done .cust-plate { font-size: 22px; }
-  .cust-card.done .cust-wagon { font-size: 22px; min-height: 48px; padding: 6px 12px; flex-basis: 140px; opacity: 0.75; }
+  .cust-card.skipped { background: var(--orange-bg); border-color: var(--orange); }
+  .cust-card.skipped .cust-time,
+  .cust-card.skipped .cust-plate,
+  .cust-card.skipped .done-row { color: var(--orange-text); }
+  .cust-card.closed .cust-plate { font-size: 22px; }
+  .cust-card.closed .cust-wagon { font-size: 22px; min-height: 48px; padding: 6px 12px; flex-basis: 140px; opacity: 0.75; }
+  .cust-badge.badge-skip { background: var(--orange-bg); color: var(--orange-text); border: 1px solid var(--orange); }
+  .btn-skip {
+    margin-left: auto;
+    min-height: 44px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: var(--orange-text);
+    border-color: var(--orange);
+  }
+  .btn-orange { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .choice-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .choice { width: 100%; justify-content: flex-start; min-height: 52px; text-align: left; font-weight: 400; }
+  .choice.active { background: var(--orange-bg); border-color: var(--orange); color: var(--orange-text); }
   .done-row {
     display: flex;
     align-items: center;
@@ -672,6 +695,9 @@
   .modal-card.tone-warn { background: var(--yellow-bg); border-color: var(--yellow-border); }
   .modal-card.tone-warn h3,
   .modal-card.tone-warn p { color: var(--yellow-text); }
+  .modal-card.tone-ok { background: var(--green-bg); border-color: var(--green); }
+  .modal-card.tone-ok h3,
+  .modal-card.tone-ok p { color: var(--green-text); }
   .modal-card.tone-alarm { background: var(--red-bg); border-color: var(--red); }
   .modal-card.tone-alarm h3,
   .modal-card.tone-alarm p { color: var(--red-text); }
@@ -730,6 +756,7 @@
 
       <div class="beladen-actions">
         <button id="btnScan" class="btn btn-primary btn-block"><i class="ti ti-camera"></i> Scannen</button>
+        <button id="btnLoadDone" class="btn btn-outline btn-block"><i class="ti ti-checklist"></i> Beladen fertig</button>
       </div>
 
       <div class="manual-entry card">
@@ -836,6 +863,26 @@
     <div class="modal-actions">
       <button id="settingsCancel" class="btn btn-outline">Abbrechen</button>
       <button id="settingsSave" class="btn btn-primary">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nicht bearbeitet: Grund wählen -->
+<div id="skipModal" class="modal hidden">
+  <div class="modal-card">
+    <h3>Nicht bearbeitet</h3>
+    <p id="skipCustomer"></p>
+    <div class="choice-list">
+      <button class="btn btn-outline choice" data-reason="Kunde nicht erschienen">Kunde nicht erschienen</button>
+      <button class="btn btn-outline choice" data-reason="Kunde abgesagt, Termin verschoben">Kunde abgesagt, Termin verschoben</button>
+      <button class="btn btn-outline choice" data-reason="Reifen nicht gefunden">Reifen nicht gefunden</button>
+      <button class="btn btn-outline choice" data-reason="Reifen nicht montierbar">Reifen nicht montierbar</button>
+      <button class="btn btn-outline choice" data-reason="other">Sonstiges …</button>
+    </div>
+    <input id="skipOther" class="dialog-input" type="text" placeholder="Grund eingeben (Pflicht)" autocomplete="off" hidden>
+    <div class="modal-actions">
+      <button id="skipCancel" class="btn btn-outline">Abbrechen</button>
+      <button id="skipSave" class="btn btn-orange" hidden>Speichern</button>
     </div>
   </div>
 </div>
@@ -1100,7 +1147,7 @@
       dialogCancel.textContent = opts.cancel || 'Abbrechen';
       dialogOk.textContent = opts.ok || 'OK';
       dialogOk.className = 'btn ' + ({ danger: 'btn-danger', warn: 'btn-yellow' }[opts.tone] || 'btn-primary');
-      dialogCard.className = 'modal-card' + (opts.tone === 'warn' ? ' tone-warn' : '') + (opts.alarm ? ' tone-alarm' : '');
+      dialogCard.className = 'modal-card' + (opts.tone === 'warn' ? ' tone-warn' : '') + (opts.alarm ? ' tone-alarm' : '') + (opts.success ? ' tone-ok' : '');
       dialogModal.classList.remove('hidden');
       if (opts.input) dialogInput.focus();
     });
@@ -1242,7 +1289,6 @@
   var singleScanDone = false;
   var lastCode = null, lastTime = 0;
   var pendingDuplicate = null;
-  var loadSessionChanged = false;
 
   var scanOverlay = document.getElementById('scanOverlay');
   var scanTargetLabel = document.getElementById('scanTargetLabel');
@@ -1284,7 +1330,6 @@
     if (result.status === 'booked') {
       beep(); vibrate(60);
       showScanToast(result.short + ' → ' + wagonLongLabel(target) + ' (' + result.count + ' Stück)');
-      loadSessionChanged = true;
       renderBeladen();
     } else if (result.status === 'already') {
       showScanToast(result.short + ' bereits auf ' + wagonLongLabel(target));
@@ -1313,7 +1358,6 @@
     if (entry) {
       beep(); vibrate(60);
       showScanToast(pendingDuplicate.short + ' → ' + wagonLongLabel(state.selectedWagonId) + ' umgebucht');
-      loadSessionChanged = true;
       renderBeladen();
     }
     pendingDuplicate = null;
@@ -1347,7 +1391,6 @@
     scanMode = opts.mode;
     singleScanCallback = opts.onCode || null;
     singleScanDone = false;
-    loadSessionChanged = false;
     scanOverlay.classList.remove('hidden');
     scanTargetLabel.textContent = scanMode === 'single' ? opts.label : 'Ziel: ' + state.selectedWagonId;
     btnEndScan.innerHTML = scanMode === 'single'
@@ -1396,7 +1439,6 @@
       if (mode === 'load') {
         selectNextWagon();
         renderBeladen();
-        if (day && loadSessionChanged) showMissingSummary('Abgleich nach Beladen');
       }
     });
   }
@@ -1454,12 +1496,13 @@
   var SELF_DELIVERY = 'SELBSTANLIEFERER';
 
   function emptyResult() {
-    return { selfStorage: false, newBarcode: null, barcodeTime: null, doneTime: null, remark: '' };
+    return { selfStorage: false, newBarcode: null, barcodeTime: null, doneTime: null, skipTime: null, skipReason: '', remark: '' };
   }
   function hasResult(c) {
     var r = c.result;
-    return r.selfStorage || !!r.newBarcode || !!r.doneTime || !!r.remark;
+    return r.selfStorage || !!r.newBarcode || !!r.doneTime || !!r.skipTime || !!r.remark;
   }
+  function isClosed(c) { return !!(c.result.doneTime || c.result.skipTime); }
   function customerKey(c) {
     return c.selfDelivery ? 'S|' + normalize(c.plate) : 'R|' + normalize(c.ref);
   }
@@ -1705,7 +1748,7 @@
   }
 
   /* ---- Fehlende Reifen ---- */
-  // Fehlend = kein Selbstanlieferer, noch nicht erledigt, Referenz auf keinem Wagen.
+  // Fehlend = kein Selbstanlieferer, nicht abgeschlossen, Referenz auf keinem Wagen.
   var missingBar = document.getElementById('missingBar');
   var missingBarText = document.getElementById('missingBarText');
   var missingBadge = document.getElementById('missingBadge');
@@ -1716,7 +1759,7 @@
     sortedCustomers().forEach(function (c) {
       if (c.selfDelivery) res.self++;
       else if (wagonForCustomer(c)) res.found++;
-      else if (!c.result.doneTime) res.missing.push(c);
+      else if (!isClosed(c)) res.missing.push(c);
     });
     return res;
   }
@@ -1727,12 +1770,15 @@
     missingBadge.hidden = z === 0;
     missingBadge.textContent = z;
   }
+  function summaryText(r) {
+    return r.found + ' gefunden · ' + r.self + ' Selbstanlieferer · ' + r.missing.length + ' FEHLEN';
+  }
   function showMissingSummary(title) {
     var r = missingCheck();
     var z = r.missing.length;
     return openDialog({
       title: title,
-      text: r.found + ' gefunden · ' + r.self + ' Selbstanlieferer · ' + z + ' FEHLEN',
+      text: summaryText(r),
       list: r.missing.map(function (c) { return [c.time, c.plate, c.ref]; }),
       alarm: z > 0,
       ok: 'OK',
@@ -1741,26 +1787,47 @@
   }
   missingBar.addEventListener('click', function () { showMissingSummary('Fehlende Reifen'); });
 
+  document.getElementById('btnLoadDone').addEventListener('click', function () {
+    if (!day) {
+      showInfo('Keine Tagesliste', 'Zum Abgleich zuerst im Tab Abarbeitung die Terminliste importieren.');
+      return;
+    }
+    var r = missingCheck();
+    if (r.missing.length) {
+      showMissingSummary('Beladen fertig');
+    } else {
+      openDialog({ title: 'Alle Reifen auf Wagen', text: summaryText(r), success: true, ok: 'OK', cancel: null });
+    }
+  });
+
   function customerCard(c, hero) {
     var r = c.result;
     var isDone = !!r.doneTime;
+    var isSkipped = !isDone && !!r.skipTime;
     var wagon = wagonForCustomer(c);
     var wagonHtml;
     if (c.selfDelivery) wagonHtml = '<div class="cust-wagon wagon-self">Kunde bringt Reifen mit</div>';
     else if (wagon) wagonHtml = '<div class="cust-wagon wagon-ok">' + escapeHtml(wagonLongLabel(wagon)) + '</div>';
     else wagonHtml = '<div class="cust-wagon wagon-none">Kein Wagen</div>';
 
-    var h = '<article class="cust-card' + (hero ? ' hero' : '') + (isDone ? ' done' : '') + '" data-cid="' + c.id + '">';
+    var stateCls = isDone ? ' closed done' : (isSkipped ? ' closed skipped' : '');
+    var topRight;
+    if (isDone) topRight = '<span class="cust-badge">Erledigt ' + hhmm(r.doneTime) + '</span>';
+    else if (isSkipped) topRight = '<span class="cust-badge badge-skip">Nicht bearbeitet ' + hhmm(r.skipTime) + '</span>';
+    else topRight = '<button class="btn btn-skip" data-action="skip">Nicht bearbeitet</button>';
+
+    var h = '<article class="cust-card' + (hero ? ' hero' : '') + stateCls + '" data-cid="' + c.id + '">';
     h += '<div class="cust-top"><span class="cust-time">' + escapeHtml(c.time || '–') + '</span>' +
       (c.selfDelivery ? '' : '<span class="cust-ref mono">' + escapeHtml(c.ref) + '</span>') +
-      (isDone ? '<span class="cust-badge">Erledigt ' + hhmm(r.doneTime) + '</span>' : '') + '</div>';
+      topRight + '</div>';
     h += '<div class="cust-main"><div class="cust-plate">' + escapeHtml(c.plate) + '</div>' + wagonHtml + '</div>';
     if (c.info) h += '<div class="cust-info">' + escapeHtml(c.info) + '</div>';
 
-    if (isDone) {
-      var summary = r.selfStorage
-        ? 'Selbsteinlagerung'
-        : 'Neuer Barcode <span class="mono">' + escapeHtml(shortOf(r.newBarcode)) + '</span>';
+    if (isDone || isSkipped) {
+      var summary;
+      if (isSkipped) summary = 'Grund: ' + escapeHtml(r.skipReason);
+      else if (r.selfStorage) summary = 'Selbsteinlagerung';
+      else summary = 'Neuer Barcode <span class="mono">' + escapeHtml(shortOf(r.newBarcode)) + '</span>';
       h += '<div class="done-row"><div>' + summary +
         (r.remark ? '<div class="done-remark">' + escapeHtml(r.remark) + '</div>' : '') + '</div>' +
         '<button class="btn btn-outline" data-action="undo"><i class="ti ti-arrow-back-up"></i> Rückgängig</button></div>';
@@ -1797,16 +1864,18 @@
       return;
     }
     var list = sortedCustomers();
-    var open = list.filter(function (c) { return !c.result.doneTime; });
+    var open = list.filter(function (c) { return !isClosed(c); });
     var done = list.filter(function (c) { return !!c.result.doneTime; });
+    var skipped = list.filter(function (c) { return !c.result.doneTime && !!c.result.skipTime; });
 
     var html = '<div class="ab-header"><div>' +
       '<div class="ab-title">Liste vom ' + deDate(day.date) + '</div>' +
-      '<div class="ab-sub">' + done.length + ' von ' + list.length + ' erledigt</div></div>' +
+      '<div class="ab-sub">' + done.length + ' von ' + list.length + ' erledigt' +
+        (skipped.length ? ' · ' + skipped.length + ' nicht bearbeitet' : '') + '</div></div>' +
       '<button class="btn btn-outline" data-action="import"><i class="ti ti-file-import"></i> Liste importieren</button></div>';
 
     html += '<div class="section-title">Nächster Kunde</div>';
-    html += open.length ? customerCard(open[0], true) : '<div class="all-done">Alle Kunden erledigt</div>';
+    html += open.length ? customerCard(open[0], true) : '<div class="all-done">Keine offenen Kunden mehr</div>';
     if (open.length > 1) {
       html += '<div class="ab-section section-title">Weitere Kunden (' + (open.length - 1) + ')</div>' +
         open.slice(1).map(function (c) { return customerCard(c, false); }).join('');
@@ -1814,6 +1883,10 @@
     if (done.length) {
       html += '<div class="ab-section section-title">Erledigt (' + done.length + ')</div>' +
         done.map(function (c) { return customerCard(c, false); }).join('');
+    }
+    if (skipped.length) {
+      html += '<div class="ab-section section-title">Nicht bearbeitet (' + skipped.length + ')</div>' +
+        skipped.map(function (c) { return customerCard(c, false); }).join('');
     }
     abContent.innerHTML = html;
   }
@@ -1885,12 +1958,82 @@
       saveDay();
       renderAbarbeitung();
       if (wasHero) scrollMainTop();
+    } else if (action === 'skip') {
+      var skippedHero = !!btn.closest('.hero');
+      askSkipReason(c).then(function (reason) {
+        if (!reason) return;
+        c.result.skipTime = Date.now();
+        c.result.skipReason = reason;
+        saveDay();
+        renderAbarbeitung();
+        if (skippedHero) scrollMainTop();
+      });
     } else if (action === 'undo') {
-      c.result.doneTime = null;
+      if (c.result.doneTime) {
+        c.result.doneTime = null;
+      } else {
+        c.result.skipTime = null;
+        c.result.skipReason = '';
+      }
       saveDay();
       renderAbarbeitung();
     }
   });
+
+  /* ---- Nicht bearbeitet: Grund wählen ---- */
+  var skipModal = document.getElementById('skipModal');
+  var skipCustomer = document.getElementById('skipCustomer');
+  var skipOther = document.getElementById('skipOther');
+  var skipSave = document.getElementById('skipSave');
+  var skipResolve = null;
+
+  function askSkipReason(c) {
+    return new Promise(function (resolve) {
+      skipResolve = resolve;
+      skipCustomer.textContent = (c.time ? c.time + ' · ' : '') + c.plate;
+      skipOther.value = '';
+      skipOther.hidden = true;
+      skipOther.classList.remove('invalid');
+      skipSave.hidden = true;
+      skipModal.querySelectorAll('.choice').forEach(function (b) { b.classList.remove('active'); });
+      skipModal.classList.remove('hidden');
+    });
+  }
+  function closeSkip(reason) {
+    skipModal.classList.add('hidden');
+    var resolve = skipResolve;
+    skipResolve = null;
+    if (resolve) resolve(reason);
+  }
+  skipModal.addEventListener('click', function (ev) {
+    var choice = ev.target.closest('.choice');
+    if (!choice) return;
+    var reason = choice.getAttribute('data-reason');
+    if (reason !== 'other') {
+      closeSkip(reason);
+      return;
+    }
+    choice.classList.add('active');
+    skipOther.hidden = false;
+    skipSave.hidden = false;
+    skipOther.focus();
+  });
+  skipSave.addEventListener('click', function () {
+    var text = skipOther.value.trim();
+    if (!text) {
+      skipOther.classList.add('invalid');
+      skipOther.focus();
+      return;
+    }
+    closeSkip('Sonstiges: ' + text);
+  });
+  skipOther.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      skipSave.click();
+    }
+  });
+  document.getElementById('skipCancel').addEventListener('click', function () { closeSkip(null); });
   abContent.addEventListener('change', function (ev) {
     var el = ev.target;
     if (el.getAttribute('data-action') !== 'self-storage') return;
@@ -2155,7 +2298,7 @@
       showToast('Nichts zu archivieren');
       return;
     }
-    var openCount = day ? day.customers.filter(function (c) { return !c.result.doneTime; }).length : 0;
+    var openCount = day ? day.customers.filter(function (c) { return !isClosed(c); }).length : 0;
     askConfirm({
       title: 'Tag beenden?',
       text: 'Liste, Wagen und Ergebnisse werden archiviert und bleiben im Export erhalten. Danach sind Wagen und Liste leer.' +
@@ -2290,13 +2433,15 @@
     });
 
     function yesNo(b) { return b ? 'ja' : 'nein'; }
-    var lines = ['Gerät;Datum;Uhrzeit Plan;Kennzeichen;Referenz;Zusatzinfo;Wagen;Selbstanlieferer;Selbsteinlagerung;Neuer Barcode;Zeit Barcode;Zeit Erledigt;Min. seit vorherigem Erledigt;Bemerkung'];
+    function status(r) { return r.doneTime ? 'Erledigt' : (r.skipTime ? 'Nicht bearbeitet' : 'offen'); }
+    var lines = ['Gerät;Datum;Uhrzeit Plan;Kennzeichen;Referenz;Zusatzinfo;Wagen;Selbstanlieferer;Selbsteinlagerung;Neuer Barcode;Zeit Barcode;Zeit Erledigt;Min. seit vorherigem Erledigt;Bemerkung;Status;Grund'];
     rows.forEach(function (row) {
       var c = row.c, r = c.result;
       lines.push([
         row.device, deDate(row.date), c.time, c.plate, c.ref, c.info, row.wagon,
         yesNo(c.selfDelivery), yesNo(r.selfStorage), r.newBarcode || '',
-        hhmm(r.barcodeTime), hhmm(r.doneTime), row.since, r.remark || ''
+        hhmm(r.barcodeTime), hhmm(r.doneTime), row.since, r.remark || '',
+        status(r), r.doneTime ? '' : (r.skipReason || '')
       ].map(csvEscape).join(';'));
     });
     deliverCsv('bingo-alles_' + fileSafe(settings.deviceName) + '_' + isoDate(new Date()) + '.csv', lines.join('\r\n'));

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bingo-liste-v2';
+const CACHE_NAME = 'bingo-liste-v3';
 
 const CORE_ASSETS = [
   './',

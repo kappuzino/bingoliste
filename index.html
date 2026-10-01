@@ -157,6 +157,22 @@
   }
   .tab-btn i { font-size: 22px; }
   .tab-btn.active { color: var(--blue); font-weight: 500; }
+  .tab-icon { position: relative; display: inline-flex; }
+  .tab-badge {
+    position: absolute;
+    top: -6px;
+    left: 14px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: var(--red);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 20px;
+    text-align: center;
+  }
 
   /* ---- Buttons ---- */
   .btn {
@@ -321,6 +337,29 @@
 
   /* ---- Abarbeitung ---- */
   .ab-wrap { max-width: 920px; margin: 0 auto; }
+  .missing-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 56px;
+    margin-bottom: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--red);
+    border-radius: var(--radius);
+    background: var(--red-bg);
+    color: var(--red-text);
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+  }
+  .missing-bar i { font-size: 22px; }
+  .missing-bar span { flex: 1 1 auto; }
   .ab-header {
     display: flex;
     align-items: center;
@@ -633,6 +672,32 @@
   .modal-card.tone-warn { background: var(--yellow-bg); border-color: var(--yellow-border); }
   .modal-card.tone-warn h3,
   .modal-card.tone-warn p { color: var(--yellow-text); }
+  .modal-card.tone-alarm { background: var(--red-bg); border-color: var(--red); }
+  .modal-card.tone-alarm h3,
+  .modal-card.tone-alarm p { color: var(--red-text); }
+  .dialog-list {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    max-height: 45vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .dialog-list li {
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 10px;
+    align-items: baseline;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 16px;
+    color: var(--text);
+  }
+  .dialog-list li:last-child { border-bottom: none; }
+  .dialog-list .dl-time { color: var(--text-muted); }
+  .dialog-list .dl-plate { font-weight: 500; }
   .modal-card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 500; }
   .modal-card p { margin: 0 0 16px; font-size: 15px; color: var(--text-muted); line-height: 1.4; }
   .modal-field { margin-bottom: 14px; }
@@ -691,6 +756,7 @@
     <!-- ABARBEITUNG -->
     <section id="tab-abarbeitung" class="tab-panel hidden">
       <div class="ab-wrap">
+        <button id="missingBar" class="missing-bar" hidden><i class="ti ti-alert-triangle"></i><span id="missingBarText"></span><i class="ti ti-chevron-right"></i></button>
         <div id="abContent"></div>
       </div>
       <input id="importFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
@@ -726,7 +792,7 @@
 
   <nav class="tabbar">
     <button class="tab-btn active" data-tab="beladen"><i class="ti ti-barcode"></i><span>Beladen</span></button>
-    <button class="tab-btn" data-tab="abarbeitung"><i class="ti ti-list-check"></i><span>Abarbeitung</span></button>
+    <button class="tab-btn" data-tab="abarbeitung"><span class="tab-icon"><i class="ti ti-list-check"></i><span id="missingBadge" class="tab-badge" hidden></span></span><span>Abarbeitung</span></button>
     <button class="tab-btn" data-tab="suchen"><i class="ti ti-search"></i><span>Suchen</span></button>
     <button class="tab-btn" data-tab="uebersicht"><i class="ti ti-layout-grid"></i><span>Übersicht</span></button>
   </nav>
@@ -779,6 +845,7 @@
   <div id="dialogCard" class="modal-card">
     <h3 id="dialogTitle"></h3>
     <p id="dialogText"></p>
+    <ul id="dialogList" class="dialog-list" hidden></ul>
     <input id="dialogInput" class="dialog-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false" hidden>
     <div class="modal-actions">
       <button id="dialogCancel" class="btn btn-outline">Abbrechen</button>
@@ -851,13 +918,17 @@
   var archive = [];
 
   function saveSettings() { kvSet('settings', settings); }
-  function saveData() { kvSet('wagons', data); }
+  function saveData() {
+    kvSet('wagons', data);
+    refreshMissing();
+  }
 
   var daySaveTimer = null;
   function saveDay() {
     clearTimeout(daySaveTimer);
     daySaveTimer = null;
     kvSet('day', day);
+    refreshMissing();
   }
   function saveDaySoon() {
     clearTimeout(daySaveTimer);
@@ -996,6 +1067,7 @@
   var dialogCard = document.getElementById('dialogCard');
   var dialogTitle = document.getElementById('dialogTitle');
   var dialogText = document.getElementById('dialogText');
+  var dialogList = document.getElementById('dialogList');
   var dialogInput = document.getElementById('dialogInput');
   var dialogOk = document.getElementById('dialogOk');
   var dialogCancel = document.getElementById('dialogCancel');
@@ -1010,6 +1082,14 @@
       dialogTitle.textContent = opts.title || '';
       dialogText.textContent = opts.text || '';
       dialogText.hidden = !opts.text;
+      var rows = opts.list || [];
+      dialogList.hidden = rows.length === 0;
+      dialogList.innerHTML = rows.map(function (row) {
+        return '<li><span class="dl-time">' + escapeHtml(row[0]) + '</span>' +
+          '<span class="dl-plate">' + escapeHtml(row[1]) + '</span>' +
+          '<span class="mono">' + escapeHtml(row[2]) + '</span></li>';
+      }).join('');
+      dialogList.scrollTop = 0;
       dialogInput.hidden = !opts.input;
       dialogInput.value = opts.value || '';
       dialogInput.placeholder = opts.placeholder || '';
@@ -1020,7 +1100,7 @@
       dialogCancel.textContent = opts.cancel || 'Abbrechen';
       dialogOk.textContent = opts.ok || 'OK';
       dialogOk.className = 'btn ' + ({ danger: 'btn-danger', warn: 'btn-yellow' }[opts.tone] || 'btn-primary');
-      dialogCard.className = 'modal-card' + (opts.tone === 'warn' ? ' tone-warn' : '');
+      dialogCard.className = 'modal-card' + (opts.tone === 'warn' ? ' tone-warn' : '') + (opts.alarm ? ' tone-alarm' : '');
       dialogModal.classList.remove('hidden');
       if (opts.input) dialogInput.focus();
     });
@@ -1162,6 +1242,7 @@
   var singleScanDone = false;
   var lastCode = null, lastTime = 0;
   var pendingDuplicate = null;
+  var loadSessionChanged = false;
 
   var scanOverlay = document.getElementById('scanOverlay');
   var scanTargetLabel = document.getElementById('scanTargetLabel');
@@ -1203,6 +1284,7 @@
     if (result.status === 'booked') {
       beep(); vibrate(60);
       showScanToast(result.short + ' → ' + wagonLongLabel(target) + ' (' + result.count + ' Stück)');
+      loadSessionChanged = true;
       renderBeladen();
     } else if (result.status === 'already') {
       showScanToast(result.short + ' bereits auf ' + wagonLongLabel(target));
@@ -1231,6 +1313,7 @@
     if (entry) {
       beep(); vibrate(60);
       showScanToast(pendingDuplicate.short + ' → ' + wagonLongLabel(state.selectedWagonId) + ' umgebucht');
+      loadSessionChanged = true;
       renderBeladen();
     }
     pendingDuplicate = null;
@@ -1264,6 +1347,7 @@
     scanMode = opts.mode;
     singleScanCallback = opts.onCode || null;
     singleScanDone = false;
+    loadSessionChanged = false;
     scanOverlay.classList.remove('hidden');
     scanTargetLabel.textContent = scanMode === 'single' ? opts.label : 'Ziel: ' + state.selectedWagonId;
     btnEndScan.innerHTML = scanMode === 'single'
@@ -1312,6 +1396,7 @@
       if (mode === 'load') {
         selectNextWagon();
         renderBeladen();
+        if (day && loadSessionChanged) showMissingSummary('Abgleich nach Beladen');
       }
     });
   }
@@ -1533,7 +1618,7 @@
     }
     renderAbarbeitung();
     scrollMainTop();
-    showToast(parsed.customers.length + ' Termine vom ' + deDate(parsed.date) + ' importiert');
+    showMissingSummary(parsed.customers.length + ' Termine vom ' + deDate(parsed.date) + ' importiert');
   }
 
   // Gleiches Datum: Ergebnisse per Referenz übernehmen, nicht mehr gelistete Kunden mit
@@ -1618,6 +1703,43 @@
       return (am - bm) || (a.order - b.order);
     });
   }
+
+  /* ---- Fehlende Reifen ---- */
+  // Fehlend = kein Selbstanlieferer, noch nicht erledigt, Referenz auf keinem Wagen.
+  var missingBar = document.getElementById('missingBar');
+  var missingBarText = document.getElementById('missingBarText');
+  var missingBadge = document.getElementById('missingBadge');
+
+  function missingCheck() {
+    var res = { found: 0, self: 0, missing: [] };
+    if (!day) return res;
+    sortedCustomers().forEach(function (c) {
+      if (c.selfDelivery) res.self++;
+      else if (wagonForCustomer(c)) res.found++;
+      else if (!c.result.doneTime) res.missing.push(c);
+    });
+    return res;
+  }
+  function refreshMissing() {
+    var z = missingCheck().missing.length;
+    missingBar.hidden = z === 0;
+    missingBarText.textContent = z + (z === 1 ? ' Reifensatz' : ' Reifensätze') + ' nicht auf Wagen';
+    missingBadge.hidden = z === 0;
+    missingBadge.textContent = z;
+  }
+  function showMissingSummary(title) {
+    var r = missingCheck();
+    var z = r.missing.length;
+    return openDialog({
+      title: title,
+      text: r.found + ' gefunden · ' + r.self + ' Selbstanlieferer · ' + z + ' FEHLEN',
+      list: r.missing.map(function (c) { return [c.time, c.plate, c.ref]; }),
+      alarm: z > 0,
+      ok: 'OK',
+      cancel: null
+    });
+  }
+  missingBar.addEventListener('click', function () { showMissingSummary('Fehlende Reifen'); });
 
   function customerCard(c, hero) {
     var r = c.result;
@@ -2219,6 +2341,7 @@
       archive = res[3] || [];
       state.selectedWagonId = wagonIds()[0] || 'W1';
       renderDeviceLabel();
+      refreshMissing();
       switchTab(initialTab());
       renderUebersicht();
       if (!settings.deviceName) askDeviceName();
